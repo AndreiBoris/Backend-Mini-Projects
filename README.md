@@ -12,3 +12,5 @@ If you’d like to see what was installed in the VM, look in /vagrant/pg_config.
 In this class you will mostly be running your work in Python from the command line. In addition you’ll use the `psql` program to interact with the PostgreSQL database.
 
 To connect `psql` to the forum database for Lesson 3, type `psql forum` at the command line. To exit psql, type `\q` or Control-D (^D).
+
+[Lesson 4 Reference](reference.html)
