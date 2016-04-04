@@ -1,6 +1,8 @@
 rdb-fullstack
 =============
 
+[More info here](https://docs.google.com/document/d/16IgOm4XprTaKxAa8w02y028oBECOoB1EI1ReddADEeY/pub?embedded=true)
+
 Common code for the Relational Databases and Full Stack Fundamentals courses
 
 ### Files and commands we’ll be using (Relational Databases)
