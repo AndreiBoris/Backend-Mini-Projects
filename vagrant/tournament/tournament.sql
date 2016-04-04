@@ -6,4 +6,15 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+DROP TABLE IF EXISTS player;
+DROP TABLE IF EXISTS match;
 
+
+CREATE TABLE player (
+  name TEXT,
+  id SERIAL PRIMARY KEY
+);
+
+CREATE TABLE match (
+  id SERIAL PRIMARY KEY
+);
