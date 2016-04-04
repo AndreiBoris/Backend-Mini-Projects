@@ -80,12 +80,12 @@ def playerStandings():
         name,
         (SELECT COUNT(*)
             FROM match
-            WHERE (first_player = player.id OR second_player = player.id))
-        AS matches,
+            WHERE (winner = player.id))
+        AS wins,
         (SELECT COUNT(*)
             FROM match
-            WHERE (winner = player.id))
-        AS wins
+            WHERE (first_player = player.id OR second_player = player.id))
+        AS matches
         FROM player;
 ''')
     result = c.fetchall()
@@ -100,6 +100,15 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
+    conn = connect()
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO match VALUES (%s, %s, %s)", (bleach.clean(winner),
+                                                    bleach.clean(loser),
+                                                    bleach.clean(winner), )
+    )
+    conn.commit()
+    conn.close()
 
 
 def swissPairings():
