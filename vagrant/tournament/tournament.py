@@ -86,7 +86,8 @@ def playerStandings():
             FROM match
             WHERE (first_player = player.id OR second_player = player.id))
         AS matches
-        FROM player;
+        FROM player
+        ORDER BY wins DESC;
 ''')
     result = c.fetchall()
     conn.close()
@@ -126,3 +127,14 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    standings = playerStandings()
+    pairings = []
+    n = len(standings)
+    i = 0
+    while i < (n - 1):
+        first = standings[i]
+        i += 1
+        second = standings[i]
+        i += 1
+        pairings.append((first[0], first[1], second[0], second[1]))
+    return pairings
