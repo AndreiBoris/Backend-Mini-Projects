@@ -6,8 +6,10 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
-DROP TABLE IF EXISTS player;
+DELETE FROM match;
+DELETE FROM player;
 DROP TABLE IF EXISTS match;
+DROP TABLE IF EXISTS player;
 
 
 CREATE TABLE player (
@@ -16,5 +18,11 @@ CREATE TABLE player (
 );
 
 CREATE TABLE match (
+  first_player INTEGER REFERENCES player(id),
+  second_player INTEGER REFERENCES player(id)
+    CONSTRAINT two_players CHECK (second_player != first_player),
+  winner INTEGER REFERENCES player(id)
+    CONSTRAINT winner_is_player CHECK (winner = first_player
+                                        OR winner = second_player),
   id SERIAL PRIMARY KEY
 );
