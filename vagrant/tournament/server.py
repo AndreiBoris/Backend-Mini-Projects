@@ -51,7 +51,9 @@ HTML_WRAP = '''\
         </form>
       </div>
       <div class="col-xs-3">
-        <button class="btn btn-default" id="swiss-pairings">Swiss Pairings</button>
+        <form method="post" action="/SwissPairings">
+          <button class="btn btn-info" type="submit">Swiss Pairings</button>
+        </form>
       </div>
       <div class="col-xs-3">
         <form method="post" action="/DeletePlayers">
@@ -82,6 +84,7 @@ HTML_WRAP = '''\
   </script>
 </body>
 </html>
+
 '''
 
 ## Request handler for main page
@@ -126,7 +129,7 @@ def AddPlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
-# # HTML template for an individual player
+## HTML template for an individual player
 PLAYER = '''\
     <li class="player-listing">
         <div class="player-listing__name">
@@ -221,12 +224,57 @@ def DeleteOnePlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
+## HTML template for a match
+PENDINGMATCH = '''\
+    <li class="pending-match">
+        <div class="pending-match__player">
+            <form method="post" action="/ReportMatch">
+                <input type="hidden" name="winnerid" value="%(first_player_id)s">
+                <input type="hidden" name="loserid" value="%(second_player_id)s">
+                <button class="btn btn-default" type="submit">%(first_player)s</button>
+            </form>
+        </div>
+        <div class="pending-match__vs">
+            <b>vs.</b>
+        </div>
+        <div class="pending-match__player">
+            <form method="post" action="/ReportMatch">
+                <input type="hidden" name="winnerid" value="%(second_player_id)s">
+                <input type="hidden" name="loserid" value="%(first_player_id)s">
+                <button class="btn btn-default" type="submit">%(second_player)s</button>
+            </form>
+        </div>
+    </li>
+'''
+
+# View the tournament mode
+def SwissPairings(env, resp):
+    '''
+    Display Swiss pairings for current player set. Works only for 8 people
+    currently.
+    '''
+    pairings = tournament.swissPairings()
+    print pairings
+    matchList = ''
+    for match in pairings:
+        matchList += PENDINGMATCH % {'first_player_id': match[0],
+                                    'first_player': match[1],
+                                    'second_player_id': match[2],
+                                    'second_player': match[3]}
+    formattedList = '<ul>%s</ul>' % matchList
+    print formattedList
+
+    headers = [('Content-type', 'text/html')]
+    resp('200 OK', headers)
+    return HTML_WRAP % formattedList
+
 ## Dispatch table - maps URL prefixes to request handlers
 DISPATCH = {'': Main,
             'AddPlayer': AddPlayer,
             'ShowPlayers': ShowPlayers,
             'DeletePlayers': DeletePlayers,
-            'DeleteOnePlayer': DeleteOnePlayer
+            'DeleteOnePlayer': DeleteOnePlayer,
+            'SwissPairings': SwissPairings
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
