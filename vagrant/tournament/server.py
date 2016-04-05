@@ -42,16 +42,21 @@ HTML_WRAP = '''\
   <div class="container">
     <div class="row" style="height: 5vh"></div>
     <div class="row" style="margin-bottom: 1em">
-      <div class="col-xs-4">
+      <div class="col-xs-3">
         <button class="btn btn-default" id="add-player">Add Player</button>
       </div>
-      <div class="col-xs-4">
+      <div class="col-xs-3">
         <form method="post" action="/ShowPlayers">
           <button class="btn btn-default" type="submit">Show Players</button>
         </form>
       </div>
-      <div class="col-xs-4">
+      <div class="col-xs-3">
         <button class="btn btn-default" id="swiss-pairings">Swiss Pairings</button>
+      </div>
+      <div class="col-xs-3">
+        <form method="post" action="/DeletePlayers">
+          <button class="btn btn-danger" type="submit">Delete All</button>
+        </form>
       </div>
     </div>
     <div class="row">
@@ -77,7 +82,6 @@ HTML_WRAP = '''\
   </script>
 </body>
 </html>
-
 '''
 
 ## Request handler for main page
@@ -118,7 +122,7 @@ def AddPlayer(env, resp):
             # Save it in the database
             tournament.registerPlayer(player)
 
-    # 302 redirect back to the main page
+    # 302 redirect back to the player standings
     headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers)
@@ -154,19 +158,29 @@ def ShowPlayers(env, resp):
                                 'losses': player[3]}
     print playerList
     formattedList = '<ul>%s</ul>' % playerList
-    # send results
-    # headers = [('Content-type', 'text/html')]
-    # resp('200 OK', headers)
-    # return [HTML_WRAP % ''.join(POST % p for p in posts)]
-    # 302 redirect back to the main page
+
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
 
+def DeletePlayers(env, resp):
+    '''
+    **DANGER**
+    DELETES all the players and matches from the database.
+    '''
+    tournament.deleteMatches()
+    tournament.deletePlayers()
+    # 302 redirect back to the main page
+    headers = [('Location', '/ShowPlayers'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
+
 ## Dispatch table - maps URL prefixes to request handlers
 DISPATCH = {'': Main,
             'AddPlayer': AddPlayer,
-            'ShowPlayers': ShowPlayers
+            'ShowPlayers': ShowPlayers,
+            'DeletePlayers': DeletePlayers
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
