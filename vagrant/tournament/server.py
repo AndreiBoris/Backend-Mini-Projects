@@ -138,6 +138,13 @@ PLAYER = '''\
         <div class="player-listing__losses">
             Losses: <b>%(losses)s</b>
         </div>
+        <div>
+            <form method="post" action="/DeleteOnePlayer">
+                <input type="hidden" name="playerid" value="%(playerid)s">
+                <button class="btn btn-danger" type="submit">X</button>
+            </form>
+        </div>
+
     </li>
 '''
 
@@ -153,13 +160,15 @@ def ShowPlayers(env, resp):
     for player in players:
         playerList += PLAYER % {'name': player[1],
                                 'wins': player[2],
-                                'losses': player[3]}
+                                'losses': player[3],
+                                'playerid': player[0]}
     formattedList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
 
+## Removes all players from database
 def DeletePlayers(env, resp):
     '''
     **DANGER**
@@ -173,11 +182,51 @@ def DeletePlayers(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
+## Remove one player from database
+def DeleteOnePlayer(env, resp):
+    '''
+    DELETE one player from the database. Set all matches with this player in
+    them to show a NULL id for this player now. Delete all matches that now
+    have two null players.
+    '''
+    # Get post content
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+
+
+    # If length is zero, post is empty - don't save it.
+    if length > 0:
+        postdata = input.read(length)
+        fields = cgi.parse_qs(postdata)
+        try:
+            playerid = fields['playerid'][0]
+        except KeyError:
+            print 'There is no player id present.'
+            playerid = ''
+        # If the player id is just white space, don't perform the post request
+        playerid = playerid.strip()
+        if playerid:
+            # Delete the player from the database
+            print 'Trying to delete the player'
+            tournament.deletePlayer(playerid)
+        else:
+            print 'No playerid'
+            print playerid
+    else:
+        print 'Length < 0 unfortunately.'
+
+    # 302 redirect back to the player standings
+    headers = [('Location', '/ShowPlayers'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
+
 ## Dispatch table - maps URL prefixes to request handlers
 DISPATCH = {'': Main,
             'AddPlayer': AddPlayer,
             'ShowPlayers': ShowPlayers,
-            'DeletePlayers': DeletePlayers
+            'DeletePlayers': DeletePlayers,
+            'DeleteOnePlayer': DeleteOnePlayer
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
