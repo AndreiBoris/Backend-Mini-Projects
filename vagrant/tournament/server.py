@@ -187,6 +187,15 @@ def ShowPlayers(env, resp):
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
 
+# Here we track the number of matches still to be played in the current
+# round of the swiss pairings tournament. This ensures that all rounds of a
+# single round are played before new pairings are made for the second round
+matchesToPlay = 0
+# Matches in the current round of the tournament being played
+currentMatches = []
+# All previous rounds in the current tournament being played.
+previousRounds = []
+
 ## Removes all players from database
 def DeletePlayers(env, resp):
     '''
@@ -195,6 +204,10 @@ def DeletePlayers(env, resp):
     '''
     tournament.deleteMatches()
     tournament.deletePlayers()
+    global matchesToPlay, currentMatches, previousRounds
+    matchesToPlay = 0
+    currentMatches = []
+    previousRounds = []
     # 302 redirect back to the main page
     headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
@@ -277,15 +290,6 @@ PLAYEDMATCH = '''\
         </div>
     </li>
 '''
-
-# Here we track the number of matches still to be played in the current
-# round of the swiss pairings tournament. This ensures that all rounds of a
-# single round are played before new pairings are made for the second round
-matchesToPlay = 0
-# Matches in the current round of the tournament being played
-currentMatches = []
-# All previous rounds in the current tournament being played.
-previousRounds = []
 
 ## Import previous rounds into swiss tournament tree
 def loadPreviousRounds(formattedList):
