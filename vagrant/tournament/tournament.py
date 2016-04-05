@@ -30,24 +30,35 @@ def deletePlayers():
     conn.close()
 
 def deletePlayer(playerid):
-    """Remove player with id playerid from the database. Remove player id from
-    all matches and replace with NULL. Delete all matches that have two NULL
+    """Remove player with id playerid from the database. First, Remove playerid
+    from all matches and replace with NULL. Delete all matches that have two NULL
     players."""
     conn = connect()
     c = conn.cursor()
+    c.execute('UPDATE match SET first_player = NULL WHERE first_player = (%s);', (bleach.clean(playerid),))
+    c.execute('UPDATE match SET second_player = NULL WHERE second_player = (%s);', (bleach.clean(playerid),))
+    c.execute('UPDATE match SET winner = NULL WHERE winner = (%s);', (bleach.clean(playerid),))
+    c.execute('DELETE FROM match WHERE first_player IS NULL AND second_player IS NULL')
     c.execute('DELETE FROM player WHERE id = (%s);', (bleach.clean(playerid),))
     conn.commit()
     conn.close()
 
-def countPlayers():
-    """Returns the number of players currently registered."""
+def countRows(tablename):
+    """Returns the number of entries in a table."""
     conn = connect()
     c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM player;')
+    c.execute('SELECT COUNT(*) FROM %s;' % tablename)
     result = c.fetchall()[0][0]
     conn.close()
     return result
 
+def countPlayers():
+    """Returns the number of players currently registered."""
+    return countRows('player')
+
+def countMatches():
+    """Return the number of matches reported to have been played."""
+    return countRows('match')
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
