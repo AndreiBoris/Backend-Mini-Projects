@@ -35,6 +35,20 @@ HTML_WRAP = '''\
     .player-listing__losses {
       width: 6em;
     }
+    .swiss-pairings {
+        display: flex;
+    }
+    .pending-match {
+      display: flex;
+      font-size: 1.2rem;
+      width: 13em;
+    }
+    .pending-match__player {
+      width: 5.5em;
+    }
+    .pending-match__player__button {
+      width: 100%%;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 </head>
@@ -139,7 +153,7 @@ PLAYER = '''\
             Wins: <b>%(wins)s</b>
         </div>
         <div class="player-listing__losses">
-            Losses: <b>%(losses)s</b>
+            Matches: <b>%(matches)s</b>
         </div>
         <div>
             <form method="post" action="/DeleteOnePlayer">
@@ -163,7 +177,7 @@ def ShowPlayers(env, resp):
     for player in players:
         playerList += PLAYER % {'name': player[1],
                                 'wins': player[2],
-                                'losses': player[3],
+                                'matches': player[3],
                                 'playerid': player[0]}
     formattedList = '<ul>%s</ul>' % playerList
 
@@ -231,42 +245,125 @@ PENDINGMATCH = '''\
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(first_player_id)s">
                 <input type="hidden" name="loserid" value="%(second_player_id)s">
-                <button class="btn btn-default" type="submit">%(first_player)s</button>
+                <input type="hidden" name="matchindex" value="%(match_index)s">
+                <button class="btn btn-default pending-match__player__button" type="submit">%(first_player)s</button>
             </form>
         </div>
         <div class="pending-match__vs">
-            <b>vs.</b>
+            <b>v.</b>
         </div>
         <div class="pending-match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(second_player_id)s">
                 <input type="hidden" name="loserid" value="%(first_player_id)s">
-                <button class="btn btn-default" type="submit">%(second_player)s</button>
+                <input type="hidden" name="matchindex" value="%(match_index)s">
+                <button class="btn btn-default pending-match__player__button" type="submit">%(second_player)s</button>
             </form>
         </div>
     </li>
 '''
 
-# View the tournament mode
+## HTML template for a played match
+PLAYEDMATCH = '''\
+    <li class="pending-match">
+        <div class="pending-match__player">
+            <button class="btn btn-%(first_player_status)s pending-match__player__button" type="submit">%(first_player)s</button>
+        </div>
+        <div class="pending-match__vs">
+            <b>v.</b>
+        </div>
+        <div class="pending-match__player">
+            <button class="btn btn-%(second_player_status)s pending-match__player__button" type="submit">%(second_player)s</button>
+        </div>
+    </li>
+'''
+
+# Here we track the number of matches still to be played in the current
+# round of the swiss pairings tournament. This ensures that all rounds of a
+# single round are played before new pairings are made for the second round
+matchesToPlay = 0
+# Matches in the current round of the tournament being played
+currentMatches = []
+# All previous rounds in the current tournament being played.
+previousRounds = []
+
+## View the tournament mode
 def SwissPairings(env, resp):
     '''
     Display Swiss pairings for current player set. Works only for 8 people
     currently.
     '''
-    pairings = tournament.swissPairings()
-    print pairings
     matchList = ''
-    for match in pairings:
-        matchList += PENDINGMATCH % {'first_player_id': match[0],
-                                    'first_player': match[1],
-                                    'second_player_id': match[2],
-                                    'second_player': match[3]}
-    formattedList = '<ul>%s</ul>' % matchList
-    print formattedList
+    global matchesToPlay, currentMatches, previousRounds
+    if matchesToPlay == 0:
+        print 'THERE ARE NO MATCHES YET TO PLAY'
+        i = 0
+        pairings = tournament.swissPairings()
+        matchesToPlay = len(pairings)
+        for match in pairings:
+            i += 1
+            currentMatches.append({
+                'firstPlayerId': match[0],
+                'firstPlayerName': match[1],
+                'secondPlayerId': match[2],
+                'secondPlayerName': match[3],
+                'winner': None,
+                'alreadyPlayed': False,
+                'index': i
+            })
+        for match in currentMatches:
+            matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
+                                        'first_player': match['firstPlayerName'],
+                                        'second_player_id': match['secondPlayerId'],
+                                        'second_player': match['secondPlayerName'],
+                                        'match_index': match['index']}
+    else:
+        print 'THERE ARE MATCHES STILL TO PLAY'
+        for match in currentMatches:
+            if match['alreadyPlayed']:
+                if match.winner == match.firstPlayerId:
+                    firstPlayerStatus, secondPlayerStatus = 'success', 'default'
+                else:
+                    secondPlayerStatus, firstPlayerStatus = 'success', 'default'
+                matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
+                                            'first_player_status': firstPlayerStatus,
+                                            'second_player': match['firstPlayerName'],
+                                            'first_player_status': secondPlayerStatus}
+            else:
+                matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
+                                            'first_player': match['firstPlayerName'],
+                                            'second_player_id': match['secondPlayerId'],
+                                            'second_player': match['secondPlayerName'],
+                                            'match_index': match['index']}
+
+    formattedList = '<ul class="swiss-pairings">%s</ul>' % matchList
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
+
+## Report a winner and loser and put the result into the database
+def ReportMatch(env, resp):
+    '''
+    Report a match with a winner and loser entered into the database.
+    '''
+    # Get post content
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+
+    # If length is zero, post is empty - don't save it.
+    if length > 0:
+        postdata = input.read(length)
+        fields = cgi.parse_qs(postdata)
+        winnerid = fields['winnerid'][0]
+        loserid = fields['loserid'][0]
+        tournament.reportMatch(winnerid, loserid)
+
+    # 302 redirect back to the player standings
+    headers = [('Location', '/ShowPlayers'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
 
 ## Dispatch table - maps URL prefixes to request handlers
 DISPATCH = {'': Main,
@@ -274,7 +371,8 @@ DISPATCH = {'': Main,
             'ShowPlayers': ShowPlayers,
             'DeletePlayers': DeletePlayers,
             'DeleteOnePlayer': DeleteOnePlayer,
-            'SwissPairings': SwissPairings
+            'SwissPairings': SwissPairings,
+            'ReportMatch': ReportMatch
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
