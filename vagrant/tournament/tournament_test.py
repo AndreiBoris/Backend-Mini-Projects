@@ -146,10 +146,75 @@ def testPairings():
                 "After one match, players with one win should be paired.")
     print "10. After one match, players with one win are properly paired."
 
+def testDeletion():
+    """
+    Test that individual players can be deleted from the database.
+    """
+    deleteMatches()
+    deletePlayers()
+    registerPlayer("Cleopatra of Egypt")
+    registerPlayer("Karl Marx")
+    registerPlayer("Helen of Troy")
+    registerPlayer("Thomas Edison")
+    registerPlayer("Marie Curie")
+    standings = playerStandings()
+    [id1, id2, id3, id4, id5] = [row[0] for row in standings]
+    deletePlayer(id5)
+    c = countPlayers()
+    if c != 4:
+        raise ValueError("After deleting one player, there should be 4 remaining players")
+    print "11. A player can be deleted individually."
+    m = countMatches()
+    if m != 0:
+        raise ValueError("Zero matches should be counted when no matches are reported.")
+    reportMatch(id1, id2)
+    reportMatch(id1, id3)
+    m = countMatches()
+    if m != 2:
+        raise ValueError("Reported match should be correctly counted.")
+    print "12. Matches can be correctly counted."
+    standings = playerStandings()
+    w1, p1 = standings[0][2], standings[0][3]
+    if w1 != 2:
+        raise ValueError(
+            "Player wins are not correctly reported. Got %s, should be 2." % w1)
+    if p1 != 2:
+        raise ValueError(
+            "Player matches are not correctly reported. Got %s, should be 2." % p1)
+    deletePlayer(id3)
+    standings = playerStandings()
+    w1, p1 = standings[0][2], standings[0][3]
+    if w1 != 2:
+        raise ValueError(
+            "Player wins are not correctly reported. Got %s, should be 2." % w1)
+    if p1 != 2:
+        raise ValueError(
+            "Player matches are not correctly reported. Got %s, should be 2." % p1)
+    m = countMatches()
+    if m != 2:
+        raise ValueError("Matches shouldn't be deleted when only one player is NULL.")
+    p2 = standings[1][3]
+    if p2 != 1:
+        raise ValueError(
+        "Losing player matches not correctly counted. Got %s, should be 1" % p2)
+    deletePlayer(id1)
+    m = countMatches()
+    if m != 1:
+        raise ValueError(
+        "Matches should be deleted when both players NULL. Got %s, expected 1." % m)
+    standings = playerStandings()
+    # player who used to have id2 is not in the first position after deleting id1
+    p2 = standings[0][3]
+    if p2 != 1:
+        raise ValueError(
+        "Match count deleted erroneously. Got %s, expected 1" % p2)
+    print "13. Deleting players correctly deletes matches when both players are NULL."
+
 
 if __name__ == '__main__':
     testCount()
     testStandingsBeforeMatches()
     testReportMatches()
     testPairings()
+    testDeletion()
     print "Success!  All tests pass!"
