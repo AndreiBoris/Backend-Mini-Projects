@@ -29,6 +29,15 @@ def deletePlayers():
     conn.commit()
     conn.close()
 
+def deletePlayer(playerid):
+    """Remove player with id playerid from the database. Remove player id from
+    all matches and replace with NULL. Delete all matches that have two NULL
+    players."""
+    conn = connect()
+    c = conn.cursor()
+    c.execute('DELETE FROM player WHERE id = (%s);', (bleach.clean(playerid),))
+    conn.commit()
+    conn.close()
 
 def countPlayers():
     """Returns the number of players currently registered."""
@@ -53,7 +62,7 @@ def registerPlayer(name):
     conn = connect()
     c = conn.cursor()
     c.execute(
-        "INSERT INTO player VALUES (%s)", (bleach.clean(name),)
+        "INSERT INTO player VALUES (%s);", (bleach.clean(name),)
     )
     conn.commit()
     conn.close()
