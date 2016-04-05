@@ -3,7 +3,7 @@
 #
 
 # The forumdb module is where the database interface code goes.
-# import forumdb
+import tournament
 
 # Other modules used to run a web server.
 import cgi
@@ -11,13 +11,14 @@ from wsgiref.simple_server import make_server
 from wsgiref import util
 
 # HTML template for the forum page
-HTML_WRAP = '''\
+HTML_WRAP = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Swiss Tournament</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -35,7 +36,10 @@ HTML_WRAP = '''\
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <input id="new-name" style="display: none" type="text" placeholder="Enter player name">
+        <form id="new-player-form" method="post" action="/AddPlayer">
+          <input name="new-player"  type="text">
+          <button type="submit">Add</button>
+        </form>
       </div>
     </div>
     <div class="row">
@@ -44,6 +48,13 @@ HTML_WRAP = '''\
       </div>
     </div>
   </div>
+  <script>
+    var $newPlayerForm = $('#new-player-form');
+    $newPlayerForm.hide();
+    $('#add-player').on('click', function() {
+      $newPlayerForm.toggle();
+    });
+  </script>
 </body>
 </html>
 '''
@@ -69,33 +80,37 @@ def View(env, resp):
     return [HTML_WRAP]
 
 ## Request handler for posting - inserts to database
-# def Post(env, resp):
-#     '''Post handles a submission of the forum's form.
-#
-#     The message the user posted is saved in the database, then it sends a 302
-#     Redirect back to the main page so the user can see their new post.
-#     '''
-#     # Get post content
-#     input = env['wsgi.input']
-#     length = int(env.get('CONTENT_LENGTH', 0))
-#     # If length is zero, post is empty - don't save it.
-#     if length > 0:
-#         postdata = input.read(length)
-#         fields = cgi.parse_qs(postdata)
-#         content = fields['content'][0]
-#         # If the post is just whitespace, don't save it.
-#         content = content.strip()
-#         if content:
-#             # Save it in the database
-#             forumdb.AddPost(content)
-#     # 302 redirect back to the main page
-#     headers = [('Location', '/'),
-#                ('Content-type', 'text/plain')]
-#     resp('302 REDIRECT', headers)
-#     return ['Redirecting']
+def AddPlayer(env, resp):
+    '''Post handles a submission of the forum's form.
+
+    The message the user posted is saved in the database, then it sends a 302
+    Redirect back to the main page so the user can see their new post.
+    '''
+    # Get post content
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+
+
+    # If length is zero, post is empty - don't save it.
+    if length > 0:
+        postdata = input.read(length)
+        fields = cgi.parse_qs(postdata)
+        player = fields['new-player'][0]
+        # If the post is just whitespace, don't save it.
+        player = player.strip()
+        if player:
+            # Save it in the database
+            tournament.registerPlayer(player)
+
+    # 302 redirect back to the main page
+    headers = [('Location', '/'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
 
 ## Dispatch table - maps URL prefixes to request handlers
-DISPATCH = {'': View
+DISPATCH = {'': View,
+            'AddPlayer': AddPlayer
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
