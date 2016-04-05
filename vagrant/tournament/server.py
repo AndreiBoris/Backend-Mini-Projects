@@ -287,6 +287,53 @@ currentMatches = []
 # All previous rounds in the current tournament being played.
 previousRounds = []
 
+## Import previous rounds into swiss tournament tree
+def loadPreviousRounds(formattedList):
+    global previousRounds
+    for round in previousRounds:
+        matchList = ''
+        for match in round:
+            if match['winner'] == match['firstPlayerId']:
+                firstPlayerStatus, secondPlayerStatus = 'success', 'default'
+            else:
+                secondPlayerStatus, firstPlayerStatus = 'success', 'default'
+            matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
+                                        'first_player_status': firstPlayerStatus,
+                                        'second_player': match['secondPlayerName'],
+                                        'second_player_status': secondPlayerStatus}
+        formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
+    return formattedList
+
+def addPendingMatch(matchList, match):
+    matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
+                                'first_player': match['firstPlayerName'],
+                                'second_player_id': match['secondPlayerId'],
+                                'second_player': match['secondPlayerName'],
+                                'match_index': match['index']}
+    return matchList
+
+def addCompletedMatch(matchList, match):
+    if match['winner'] == match['firstPlayerId']:
+        firstPlayerStatus, secondPlayerStatus = 'success', 'default'
+    else:
+        secondPlayerStatus, firstPlayerStatus = 'success', 'default'
+    matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
+                                'first_player_status': firstPlayerStatus,
+                                'second_player': match['secondPlayerName'],
+                                'second_player_status': secondPlayerStatus}
+    return matchList
+
+def blankMatch(pairing, i):
+    return {
+        'firstPlayerId': pairing[0],
+        'firstPlayerName': pairing[1],
+        'secondPlayerId': pairing[2],
+        'secondPlayerName': pairing[3],
+        'winner': None,
+        'alreadyPlayed': False,
+        'index': i
+    }
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -294,73 +341,58 @@ def SwissPairings(env, resp):
     currently.
     '''
     matchList = ''
+    formattedList = ''
     global matchesToPlay, currentMatches, previousRounds
     if matchesToPlay == 0:
-        print 'THERE ARE NO MATCHES YET TO PLAY'
+        if currentMatches:
+            previousRounds.append(currentMatches)
+            currentMatches = []
         i = 0
         pairings = tournament.swissPairings()
         matchesToPlay = len(pairings)
-        for match in pairings:
+        for pairing in pairings:
+            currentMatches.append(blankMatch(pairing, i))
             i += 1
-            currentMatches.append({
-                'firstPlayerId': match[0],
-                'firstPlayerName': match[1],
-                'secondPlayerId': match[2],
-                'secondPlayerName': match[3],
-                'winner': None,
-                'alreadyPlayed': False,
-                'index': i
-            })
+        formattedList = loadPreviousRounds(formattedList)
         for match in currentMatches:
-            matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
-                                        'first_player': match['firstPlayerName'],
-                                        'second_player_id': match['secondPlayerId'],
-                                        'second_player': match['secondPlayerName'],
-                                        'match_index': match['index']}
+            matchList = addPendingMatch(matchList, match)
     else:
-        print 'THERE ARE MATCHES STILL TO PLAY'
+        formattedList = loadPreviousRounds(formattedList)
         for match in currentMatches:
             if match['alreadyPlayed']:
-                if match.winner == match.firstPlayerId:
-                    firstPlayerStatus, secondPlayerStatus = 'success', 'default'
-                else:
-                    secondPlayerStatus, firstPlayerStatus = 'success', 'default'
-                matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
-                                            'first_player_status': firstPlayerStatus,
-                                            'second_player': match['firstPlayerName'],
-                                            'first_player_status': secondPlayerStatus}
+                matchList = addCompletedMatch(matchList, match)
             else:
-                matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
-                                            'first_player': match['firstPlayerName'],
-                                            'second_player_id': match['secondPlayerId'],
-                                            'second_player': match['secondPlayerName'],
-                                            'match_index': match['index']}
+                matchList = addPendingMatch(matchList, match)
 
-    formattedList = '<ul class="swiss-pairings">%s</ul>' % matchList
+    formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
 
-## Report a winner and loser and put the result into the database
+## Report a winner and loser and store it in the global currentMatches
 def ReportMatch(env, resp):
     '''
-    Report a match with a winner and loser entered into the database.
+    Report a match and store it in the global currentMatches
     '''
     # Get post content
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
+    postdata = input.read(length)
+    fields = cgi.parse_qs(postdata)
+    global currentMatches, matchesToPlay
 
-    # If length is zero, post is empty - don't save it.
-    if length > 0:
-        postdata = input.read(length)
-        fields = cgi.parse_qs(postdata)
-        winnerid = fields['winnerid'][0]
-        loserid = fields['loserid'][0]
-        tournament.reportMatch(winnerid, loserid)
+    matchesToPlay -= 1
 
-    # 302 redirect back to the player standings
-    headers = [('Location', '/ShowPlayers'),
+    winnerid = int(fields['winnerid'][0])
+    index = int(fields['matchindex'][0])
+
+    currentMatches[index]['winner'] = winnerid
+    currentMatches[index]['alreadyPlayed'] = True
+    # tournament.reportMatch(winnerid, loserid)
+
+    # 302 redirect back to the swiss pairings
+    headers = [('Location', '/SwissPairings'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers)
     return ['Redirecting']
