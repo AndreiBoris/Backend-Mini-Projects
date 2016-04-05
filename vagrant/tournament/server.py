@@ -121,6 +121,14 @@ currentMatches = []
 # All previous rounds in the current tournament being played.
 previousRounds = []
 
+## Delete all information regarding the current tournament to make room for a
+## next tournament.
+def clearTournament():
+    global matchesToPlay, currentMatches, previousRounds
+    matchesToPlay = 0
+    currentMatches = []
+    previousRounds = []
+
 ## Request handler for posting
 def AddPlayer(env, resp):
     '''Post handles a submission of the forum's form.
@@ -132,12 +140,7 @@ def AddPlayer(env, resp):
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
 
-    global matchesToPlay, currentMatches, previousRounds
-    # Clear tournament when a new player is added. All players must be in the
-    # tournament already by the time it begins.
-    matchesToPlay = 0
-    currentMatches = []
-    previousRounds = []
+    clearTournament()
 
     # If length is zero, post is empty - don't save it.
     if length > 0:
@@ -210,10 +213,7 @@ def DeletePlayers(env, resp):
     '''
     tournament.deleteMatches()
     tournament.deletePlayers()
-    global matchesToPlay, currentMatches, previousRounds
-    matchesToPlay = 0
-    currentMatches = []
-    previousRounds = []
+    clearTournament()
     # 302 redirect back to the main page
     headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
@@ -245,8 +245,8 @@ def DeleteOnePlayer(env, resp):
         playerid = playerid.strip()
         if playerid:
             # Delete the player from the database
-            print 'Trying to delete the player'
             tournament.deletePlayer(playerid)
+            clearTournament()
         else:
             print 'No playerid'
             print playerid
