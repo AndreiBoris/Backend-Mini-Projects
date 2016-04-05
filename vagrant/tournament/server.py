@@ -49,6 +49,9 @@ HTML_WRAP = '''\
     .pending-match__player__button {
       width: 100%%;
     }
+    .hidden {
+      display: none;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 </head>
@@ -77,7 +80,7 @@ HTML_WRAP = '''\
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <form id="new-player-form" method="post" action="/AddPlayer">
+        <form class="hidden" id="new-player-form" method="post" action="/AddPlayer">
           <input name="new-player"  type="text">
           <button class="btn btn-primary" type="submit">Add</button>
         </form>
@@ -91,9 +94,8 @@ HTML_WRAP = '''\
   </div>
   <script>
     var $newPlayerForm = $('#new-player-form');
-    $newPlayerForm.hide();
     $('#add-player').on('click', function() {
-      $newPlayerForm.toggle();
+      $newPlayerForm.toggleClass('hidden');
     });
   </script>
 </body>
