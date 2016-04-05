@@ -246,9 +246,8 @@ PENDINGMATCH = '''\
         <div class="pending-match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(first_player_id)s">
-                <input type="hidden" name="loserid" value="%(second_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-default pending-match__player__button" type="submit">%(first_player)s</button>
+                <button class="btn btn-info pending-match__player__button" type="submit">%(first_player)s</button>
             </form>
         </div>
         <div class="pending-match__vs">
@@ -257,9 +256,8 @@ PENDINGMATCH = '''\
         <div class="pending-match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(second_player_id)s">
-                <input type="hidden" name="loserid" value="%(first_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-default pending-match__player__button" type="submit">%(second_player)s</button>
+                <button class="btn btn-info pending-match__player__button" type="submit">%(second_player)s</button>
             </form>
         </div>
     </li>
