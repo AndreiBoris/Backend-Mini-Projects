@@ -112,6 +112,15 @@ def Main(env, resp):
     resp('200 OK', headers)
     return HTML_WRAP % ''
 
+# Here we track the number of matches still to be played in the current
+# round of the swiss pairings tournament. This ensures that all rounds of a
+# single round are played before new pairings are made for the second round
+matchesToPlay = 0
+# Matches in the current round of the tournament being played
+currentMatches = []
+# All previous rounds in the current tournament being played.
+previousRounds = []
+
 ## Request handler for posting
 def AddPlayer(env, resp):
     '''Post handles a submission of the forum's form.
@@ -123,6 +132,12 @@ def AddPlayer(env, resp):
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
 
+    global matchesToPlay, currentMatches, previousRounds
+    # Clear tournament when a new player is added. All players must be in the
+    # tournament already by the time it begins.
+    matchesToPlay = 0
+    currentMatches = []
+    previousRounds = []
 
     # If length is zero, post is empty - don't save it.
     if length > 0:
@@ -186,15 +201,6 @@ def ShowPlayers(env, resp):
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % formattedList
-
-# Here we track the number of matches still to be played in the current
-# round of the swiss pairings tournament. This ensures that all rounds of a
-# single round are played before new pairings are made for the second round
-matchesToPlay = 0
-# Matches in the current round of the tournament being played
-currentMatches = []
-# All previous rounds in the current tournament being played.
-previousRounds = []
 
 ## Removes all players from database
 def DeletePlayers(env, resp):
