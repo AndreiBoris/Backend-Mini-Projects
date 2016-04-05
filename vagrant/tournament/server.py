@@ -334,6 +334,17 @@ def blankMatch(pairing, i):
         'index': i
     }
 
+## Push completed rounds to the database and clear currentMatches
+def prepareForNextRound():
+    global previousRounds, currentMatches
+    for match in currentMatches:
+        a, b, w = int(match['firstPlayerId']), int(match['secondPlayerId']), int(match['winner'])
+        winner = a if a == w else b
+        loser = b if a == w else a
+        tournament.reportMatch(winner, loser)
+    previousRounds.append(currentMatches)
+    currentMatches = []
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -345,8 +356,7 @@ def SwissPairings(env, resp):
     global matchesToPlay, currentMatches, previousRounds
     if matchesToPlay == 0:
         if currentMatches:
-            previousRounds.append(currentMatches)
-            currentMatches = []
+            prepareForNextRound()
         i = 0
         pairings = tournament.swissPairings()
         matchesToPlay = len(pairings)
