@@ -89,12 +89,6 @@ def Main(env, resp):
     '''
     This the main page.
     '''
-    # # get posts from database
-    # posts = forumdb.GetAllPosts()
-    # # send results
-    # headers = [('Content-type', 'text/html')]
-    # resp('200 OK', headers)
-    # return [HTML_WRAP % ''.join(POST % p for p in posts)]
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return HTML_WRAP % ''
@@ -115,7 +109,11 @@ def AddPlayer(env, resp):
     if length > 0:
         postdata = input.read(length)
         fields = cgi.parse_qs(postdata)
-        player = fields['new-player'][0]
+        try:
+            player = fields['new-player'][0]
+        except KeyError:
+            print 'No input string for new player.'
+            player = ''
         # If the post is just whitespace, don't save it.
         player = player.strip()
         if player:
@@ -156,7 +154,6 @@ def ShowPlayers(env, resp):
         playerList += PLAYER % {'name': player[1],
                                 'wins': player[2],
                                 'losses': player[3]}
-    print playerList
     formattedList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]
