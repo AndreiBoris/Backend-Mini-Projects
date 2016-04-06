@@ -11,6 +11,13 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
+def deleteTournaments():
+    """Remove all tournament records from the database"""
+    conn = connect()
+    c = conn.cursor()
+    c.execute('DELETE FROM tournament;')
+    conn.commit()
+    conn.close()
 
 def deleteMatches():
     """Remove all the match records from the database."""
@@ -39,6 +46,7 @@ def deletePlayer(playerid):
     c.execute('UPDATE match SET second_player = NULL WHERE second_player = (%s);', (bleach.clean(playerid),))
     c.execute('UPDATE match SET winner = NULL WHERE winner = (%s);', (bleach.clean(playerid),))
     c.execute('DELETE FROM match WHERE first_player IS NULL AND second_player IS NULL')
+    c.execute('DELETE FROM tournament WHERE winner = (%s)', (bleach.clean(playerid),))
     c.execute('DELETE FROM player WHERE id = (%s);', (bleach.clean(playerid),))
     conn.commit()
     conn.close()

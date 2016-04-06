@@ -211,6 +211,7 @@ def DeletePlayers(env, resp):
     **DANGER**
     DELETES all the players and matches from the database.
     '''
+    tournament.deleteTournaments()
     tournament.deleteMatches()
     tournament.deletePlayers()
     clearTournament()
