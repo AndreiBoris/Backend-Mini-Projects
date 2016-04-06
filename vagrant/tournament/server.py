@@ -32,21 +32,24 @@ HTML_WRAP = '''\
     .player-listing__wins {
       width: 6em;
     }
-    .player-listing__losses {
+    .player-listing__matches {
       width: 6em;
+    }
+    .player-listing__delete {
+      margin-left: 0.75em;
     }
     .swiss-pairings {
         display: flex;
     }
-    .pending-match {
+    .match {
       display: flex;
       font-size: 1.2rem;
-      width: 13em;
+      width: 14em;
     }
-    .pending-match__player {
-      width: 5.5em;
+    .match__player {
+      width: 6em;
     }
-    .pending-match__player__button {
+    .match__player__button {
       width: 100%%;
     }
     .hidden {
@@ -152,6 +155,8 @@ def AddPlayer(env, resp):
             player = ''
         # If the post is just whitespace, don't save it.
         player = player.strip()
+        if len(player) > 9:
+            player = player[:9]
         if player:
             # Save it in the database
             clearTournament()
@@ -172,10 +177,13 @@ PLAYER = '''\
         <div class="player-listing__wins">
             Wins: <b>%(wins)s</b>
         </div>
-        <div class="player-listing__losses">
+        <div class="player-listing__matches">
             Matches: <b>%(matches)s</b>
         </div>
         <div>
+            Tourny Wins: <b>%(tournyWins)s</b>
+        </div>
+        <div class="player-listing__delete">
             <form method="post" action="/DeleteOnePlayer">
                 <input type="hidden" name="playerid" value="%(playerid)s">
                 <button class="btn btn-danger" type="submit">X</button>
@@ -198,7 +206,8 @@ def ShowPlayers(env, resp):
         playerList += PLAYER % {'name': player[1],
                                 'wins': player[2],
                                 'matches': player[3],
-                                'playerid': player[0]}
+                                'playerid': player[0],
+                                'tournyWins': player[4] or 0}
     formattedList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]
@@ -262,22 +271,22 @@ def DeleteOnePlayer(env, resp):
 
 ## HTML template for a match
 PENDINGMATCH = '''\
-    <li class="pending-match">
-        <div class="pending-match__player">
+    <li class="match">
+        <div class="match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(first_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info pending-match__player__button" type="submit">%(first_player)s</button>
+                <button class="btn btn-info match__player__button" type="submit">%(first_player)s</button>
             </form>
         </div>
-        <div class="pending-match__vs">
+        <div class="match__vs">
             <b>v.</b>
         </div>
-        <div class="pending-match__player">
+        <div class="match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(second_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info pending-match__player__button" type="submit">%(second_player)s</button>
+                <button class="btn btn-info match__player__button" type="submit">%(second_player)s</button>
             </form>
         </div>
     </li>
@@ -285,15 +294,15 @@ PENDINGMATCH = '''\
 
 ## HTML template for a played match
 PLAYEDMATCH = '''\
-    <li class="pending-match">
-        <div class="pending-match__player">
-            <button class="btn btn-%(first_player_status)s pending-match__player__button" type="submit">%(first_player)s</button>
+    <li class="match">
+        <div class="match__player">
+            <button class="btn btn-%(first_player_status)s match__player__button" type="submit">%(first_player)s</button>
         </div>
-        <div class="pending-match__vs">
+        <div class="match__vs">
             <b>v.</b>
         </div>
-        <div class="pending-match__player">
-            <button class="btn btn-%(second_player_status)s pending-match__player__button" type="submit">%(second_player)s</button>
+        <div class="match__player">
+            <button class="btn btn-%(second_player_status)s match__player__button" type="submit">%(second_player)s</button>
         </div>
     </li>
 '''
@@ -356,6 +365,17 @@ def prepareForNextRound():
     previousRounds.append(currentMatches)
     currentMatches = []
 
+roundsLeft = 0
+tournamentBegan = False
+tournamentOver = False
+lastTournamentResult = ''
+
+def determineRoundsNeeded(pairs):
+    n = 0
+    while pairs > 2**n:
+        n += 1
+    return n
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -364,28 +384,53 @@ def SwissPairings(env, resp):
     '''
     matchList = ''
     formattedList = ''
-    global matchesToPlay, currentMatches, previousRounds
-    if matchesToPlay == 0:
-        if currentMatches:
-            prepareForNextRound()
-        i = 0
-        pairings = tournament.swissPairings()
-        matchesToPlay = len(pairings)
-        for pairing in pairings:
-            currentMatches.append(blankMatch(pairing, i))
-            i += 1
-        formattedList = loadPreviousRounds(formattedList)
-        for match in currentMatches:
-            matchList = addPendingMatch(matchList, match)
-    else:
-        formattedList = loadPreviousRounds(formattedList)
-        for match in currentMatches:
-            if match['alreadyPlayed']:
-                matchList = addCompletedMatch(matchList, match)
-            else:
+    global matchesToPlay, currentMatches, previousRounds, roundsLeft
+    global tournamentBegan, tournamentOver, lastTournamentResult
+    if not tournamentBegan:
+        tournamentBegan = True
+        pairs = len(tournament.swissPairings())
+        roundsLeft = determineRoundsNeeded(pairs)
+    if not tournamentOver:
+        if roundsLeft and matchesToPlay == 0: # new round
+            if currentMatches: # We already have a round saved
+                prepareForNextRound() # Clear matches and insert into database
+                roundsLeft -= 1
+            i = 0 # index for the matches for the current round
+            pairings = tournament.swissPairings()
+            matchesToPlay = len(pairings)
+            for pairing in pairings:
+                currentMatches.append(blankMatch(pairing, i))
+                i += 1
+            formattedList = loadPreviousRounds(formattedList)
+            for match in currentMatches:
                 matchList = addPendingMatch(matchList, match)
+        elif matchesToPlay > 0:
+            formattedList = loadPreviousRounds(formattedList)
+            for match in currentMatches:
+                if match['alreadyPlayed']:
+                    matchList = addCompletedMatch(matchList, match)
+                else:
+                    matchList = addPendingMatch(matchList, match)
+        else:
+            tournamentOver = True
+            prepareForNextRound()
+            lastTournamentResult = loadPreviousRounds('')
+            previousRounds = []
+            winner = tournament.playerStandings()[0][1]
+            lastTournamentResult += '''
+<h2> The winner is %s!</h2>
+<form method="post" action="/ReportTournament">
+    <button class="btn btn-warning" type="submit">Store Tournament</button>
+</form>
+''' % (winner)
 
     formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
+
+    if tournamentOver:
+        formattedList = lastTournamentResult
+        print formattedList
+        print 'It\'s over buddy!'
+
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
@@ -410,10 +455,32 @@ def ReportMatch(env, resp):
 
     currentMatches[index]['winner'] = winnerid
     currentMatches[index]['alreadyPlayed'] = True
-    # tournament.reportMatch(winnerid, loserid)
 
     # 302 redirect back to the swiss pairings
     headers = [('Location', '/SwissPairings'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
+
+## Report the tournament that had just played out
+def ReportTournament(env, resp):
+    '''
+    Report a tournament and clear matches for a next tournament.
+    '''
+    # Get post content
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+    postdata = input.read(length)
+    fields = cgi.parse_qs(postdata)
+    global tournamentBegan, tournamentOver, lastTournamentResult
+    tournamentOver = False
+    tournamentBegan = False
+    lastTournamentResult = ''
+
+    tournament.reportTournament()
+
+    # 302 redirect back to the swiss pairings
+    headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers)
     return ['Redirecting']
@@ -425,7 +492,8 @@ DISPATCH = {'': Main,
             'DeletePlayers': DeletePlayers,
             'DeleteOnePlayer': DeleteOnePlayer,
             'SwissPairings': SwissPairings,
-            'ReportMatch': ReportMatch
+            'ReportMatch': ReportMatch,
+            'ReportTournament': ReportTournament
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
