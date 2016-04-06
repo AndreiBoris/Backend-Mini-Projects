@@ -32,6 +32,13 @@ tournamentOver = False
 # If the tournament is over, store the round info for review.
 lastTournamentResult = ''
 
+## Helper function to get at the fields inside submitted forms
+def getFields(env):
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+    postdata = input.read(length)
+    return cgi.parse_qs(postdata)
+
 
 ## Delete all information regarding the current tournament to make room for the
 ## next tournament.
@@ -78,24 +85,26 @@ def AddPlayer(env, resp):
     '''
     Add a player into the SQL database.
     '''
-    # Get post content
-    input = env['wsgi.input']
-    length = int(env.get('CONTENT_LENGTH', 0))
+    # Get fields from the submitted form
+    fields = getFields(env)
 
-    postdata = input.read(length)
-    fields = cgi.parse_qs(postdata)
+    # Use a try and except to avoid KeyError if the input field is empty
     try:
         player = fields['new-player'][0]
     except KeyError:
         print 'No input string for new player.'
         player = ''
-    # If the post is just whitespace, don't save it.
+
+    # If the name is just whitespace, don't save it.
     player = player.strip()
+
+    # Cut down to 9 characters to avoid names leaking over buttons
     if len(player) > 9:
         player = player[:9]
-    if player:
+
+    if player: # player is not an empty string
         # Save it in the database
-        clearTournament()
+        clearTournament() # need to reset tournament, otherwise new player confuses it
         tournament.registerPlayer(player)
 
     # 302 redirect back to the player standings
@@ -109,23 +118,27 @@ def AddPlayer(env, resp):
 ## Request handler for viewing all registered players
 def ShowPlayers(env, resp):
     '''
-    GETs the current list of registered players.
+    Gets the current list of registered players.
     '''
     cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
-    # Get post content
-    # get posts from database
+
+    # get list of tuples (playerid, name, wins, matches, tourny_wins)
     players = tournament.playerStandings()
-    playerList = ''
+    playerList = '' # this will hold HTML content to format into templates.HTML_WRAP
     for player in players:
+        # Use tuples to create HTML markup to organize each player's info and
+        # store all of this in playerList
         playerList += templates.PLAYER % {'name': player[1],
                                 'wins': player[2],
                                 'matches': player[3],
                                 'playerid': player[0],
                                 'tournyWins': player[4] or 0}
+    # playerList needs to be inside <ul> tags as each player is a <li> element
     formattedList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
+    # Fill the main template with the list of players
     return templates.HTML_WRAP % formattedList
 
 ## Removes all players from database
@@ -134,11 +147,15 @@ def DeletePlayers(env, resp):
     **DANGER**
     DELETES all the players and matches from the database.
     '''
+    # Need to delete tournaments and matches as those tables depend on players
     tournament.deleteTournaments()
     tournament.deleteMatches()
     tournament.deletePlayers()
+    # Clear the variables stored in python for the current tournament as it now
+    # depends on non-existant players.
     clearTournament()
-    # 302 redirect back to the main page
+    # 302 redirect back to the page displaying the players, showing the user
+    # that this list is now empty.
     headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers)
@@ -151,31 +168,24 @@ def DeleteOnePlayer(env, resp):
     them to show a NULL id for this player now. Delete all matches that now
     have two null players.
     '''
-    # Get post content
-    input = env['wsgi.input']
-    length = int(env.get('CONTENT_LENGTH', 0))
+    # Get fields from the submitted form
+    fields = getFields(env)
 
-
-    # If length is zero, post is empty - don't save it.
-    if length > 0:
-        postdata = input.read(length)
-        fields = cgi.parse_qs(postdata)
-        try:
-            playerid = fields['playerid'][0]
-        except KeyError:
-            print 'There is no player id present.'
-            playerid = ''
-        # If the player id is just white space, don't perform the post request
-        playerid = playerid.strip()
-        if playerid:
-            # Delete the player from the database
-            tournament.deletePlayer(playerid)
-            clearTournament()
-        else:
-            print 'No playerid'
-            print playerid
+    # Make sure there is a playerid associated with the delete form sent
+    try:
+        playerid = fields['playerid'][0]
+    except KeyError:
+        print 'There is no player id present.'
+        playerid = ''
+    # If the player id is just white space, don't perform the post request
+    playerid = playerid.strip()
+    if playerid:
+        # Delete the player from the database
+        tournament.deletePlayer(playerid)
+        clearTournament()
     else:
-        print 'Length <= 0 unfortunately.'
+        print 'No playerid'
+        print playerid
 
     # 302 redirect back to the player standings
     headers = [('Location', '/ShowPlayers'),
@@ -298,11 +308,8 @@ def ReportMatch(env, resp):
     '''
     Report a match and store it in the global currentMatches
     '''
-    # Get post content
-    input = env['wsgi.input']
-    length = int(env.get('CONTENT_LENGTH', 0))
-    postdata = input.read(length)
-    fields = cgi.parse_qs(postdata)
+    # Get fields from the submitted form
+    fields = getFields(env)
     global currentMatches, matchesToPlay
 
     matchesToPlay -= 1
@@ -324,11 +331,8 @@ def ReportTournament(env, resp):
     '''
     Report a tournament and clear matches for a next tournament.
     '''
-    # Get post content
-    input = env['wsgi.input']
-    length = int(env.get('CONTENT_LENGTH', 0))
-    postdata = input.read(length)
-    fields = cgi.parse_qs(postdata)
+    # Get fields from the submitted form
+    fields = getFields(env)
     choice = fields['storeTournament'][0]
 
     global tournamentBegan, tournamentOver, lastTournamentResult
