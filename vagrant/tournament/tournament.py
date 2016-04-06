@@ -124,12 +124,36 @@ def reportMatch(winner, loser):
     conn = connect()
     c = conn.cursor()
     c.execute(
-        "INSERT INTO match VALUES (%s, %s, %s)", (bleach.clean(winner),
+        "INSERT INTO match VALUES (%s, %s, %s);", (bleach.clean(winner),
                                                     bleach.clean(loser),
                                                     bleach.clean(winner), )
     )
     conn.commit()
     conn.close()
+
+def reportTournament():
+    """
+    Reports the winner of a tournament, allowing us to store this and reset the
+    match data. Also stores the number of wins that player had in this
+    tournament.
+    """
+    standings = playerStandings()
+    print 'REPORT TOURNAMENT:'
+    topWins = standings[0][2]
+    winner = standings[0][0]
+    winnerName = None
+    if topWins:
+        conn = connect()
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO tournament VALUES (%s, %s);", (bleach.clean(winner),
+                                                        bleach.clean(topWins),)
+        )
+        conn.commit()
+        conn.close()
+        deleteMatches()
+        winnerName = standings[0][1]
+    return winnerName
 
 
 def swissPairings():
