@@ -14,6 +14,7 @@ def testCount():
              player count after 1 and 2 players registered,
              player count after players deleted.
     """
+    deleteTournaments()
     deleteMatches()
     deletePlayers()
     c = countPlayers()
@@ -47,6 +48,7 @@ def testStandingsBeforeMatches():
     Test to ensure players are properly represented in standings prior
     to any matches being reported.
     """
+    deleteTournaments()
     deleteMatches()
     deletePlayers()
     registerPlayer("Melpomene Murray")
@@ -57,9 +59,9 @@ def testStandingsBeforeMatches():
                          "they have played any matches.")
     elif len(standings) > 2:
         raise ValueError("Only registered players should appear in standings.")
-    if len(standings[0]) != 4:
-        raise ValueError("Each playerStandings row should have four columns.")
-    [(id1, name1, wins1, matches1), (id2, name2, wins2, matches2)] = standings
+    if len(standings[0]) != 5:
+        raise ValueError("Each playerStandings row should have five columns.")
+    [(id1, name1, wins1, matches1, tour1), (id2, name2, wins2, matches2, tour2)] = standings
     if matches1 != 0 or matches2 != 0 or wins1 != 0 or wins2 != 0:
         raise ValueError(
             "Newly registered players should have no matches or wins.")
@@ -73,6 +75,7 @@ def testReportMatches():
     Test that matches are reported properly.
     Test to confirm matches are deleted properly.
     """
+    deleteTournaments()
     deleteMatches()
     deletePlayers()
     registerPlayer("Bruno Walton")
@@ -84,7 +87,7 @@ def testReportMatches():
     reportMatch(id1, id2)
     reportMatch(id3, id4)
     standings = playerStandings()
-    for (i, n, w, m) in standings:
+    for (i, n, w, m, t) in standings:
         if m != 1:
             raise ValueError("Each player should have one match recorded.")
         if i in (id1, id3) and w != 1:
@@ -96,7 +99,7 @@ def testReportMatches():
     standings = playerStandings()
     if len(standings) != 4:
         raise ValueError("Match deletion should not change number of players in standings.")
-    for (i, n, w, m) in standings:
+    for (i, n, w, m, t) in standings:
         if m != 0:
             raise ValueError("After deleting matches, players should have zero matches recorded.")
         if w != 0:
@@ -107,6 +110,7 @@ def testPairings():
     """
     Test that pairings are generated properly both before and after match reporting.
     """
+    deleteTournaments()
     deleteMatches()
     deletePlayers()
     registerPlayer("Twilight Sparkle")
@@ -150,6 +154,7 @@ def testDeletion():
     """
     Test that individual players can be deleted from the database.
     """
+    deleteTournaments()
     deleteMatches()
     deletePlayers()
     registerPlayer("Cleopatra of Egypt")
