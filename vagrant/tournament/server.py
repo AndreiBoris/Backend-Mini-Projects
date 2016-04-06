@@ -128,6 +128,7 @@ def clearTournament():
     matchesToPlay = 0
     currentMatches = []
     previousRounds = []
+    tournament.deleteMatches()
 
 ## Request handler for posting
 def AddPlayer(env, resp):
@@ -139,8 +140,6 @@ def AddPlayer(env, resp):
     # Get post content
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
-
-    clearTournament()
 
     # If length is zero, post is empty - don't save it.
     if length > 0:
@@ -155,6 +154,7 @@ def AddPlayer(env, resp):
         player = player.strip()
         if player:
             # Save it in the database
+            clearTournament()
             tournament.registerPlayer(player)
 
     # 302 redirect back to the player standings
