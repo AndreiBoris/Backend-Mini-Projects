@@ -32,8 +32,11 @@ HTML_WRAP = '''\
     .player-listing__wins {
       width: 6em;
     }
-    .player-listing__losses {
+    .player-listing__matches {
       width: 6em;
+    }
+    .player-listing__delete {
+      margin-left: 0.75em;
     }
     .swiss-pairings {
         display: flex;
@@ -174,10 +177,13 @@ PLAYER = '''\
         <div class="player-listing__wins">
             Wins: <b>%(wins)s</b>
         </div>
-        <div class="player-listing__losses">
+        <div class="player-listing__matches">
             Matches: <b>%(matches)s</b>
         </div>
         <div>
+            Tourny Wins: <b>%(tournyWins)s</b>
+        </div>
+        <div class="player-listing__delete">
             <form method="post" action="/DeleteOnePlayer">
                 <input type="hidden" name="playerid" value="%(playerid)s">
                 <button class="btn btn-danger" type="submit">X</button>
@@ -200,7 +206,8 @@ def ShowPlayers(env, resp):
         playerList += PLAYER % {'name': player[1],
                                 'wins': player[2],
                                 'matches': player[3],
-                                'playerid': player[0]}
+                                'playerid': player[0],
+                                'tournyWins': player[4] or 0}
     formattedList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]

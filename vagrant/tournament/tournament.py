@@ -97,8 +97,9 @@ def playerStandings():
       A list of tuples, each of which contains (id, name, wins, matches):
         id: the player's unique id (assigned by the database)
         name: the player's full name (as registered)
-        wins: the number of matches the player has won
+        wins: the number of matches the player has won in the current tournament
         matches: the number of matches the player has played
+        tourny_wins: the number of tournaments the player has won
     """
     conn = connect()
     c = conn.cursor()
@@ -108,12 +109,16 @@ def playerStandings():
         name,
         (SELECT COUNT(*)
             FROM match
-            WHERE (winner = player.id))
+            WHERE (match.winner = player.id))
         AS wins,
         (SELECT COUNT(*)
             FROM match
             WHERE (first_player = player.id OR second_player = player.id))
-        AS matches
+        AS matches,
+        (SELECT COUNT(*)
+            FROM tournament
+            WHERE (tournament.winner = player.id))
+        AS tourny_wins
         FROM player
         ORDER BY wins DESC;
 ''')
