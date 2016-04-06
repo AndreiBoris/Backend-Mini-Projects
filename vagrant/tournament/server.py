@@ -24,7 +24,7 @@ currentMatches = []
 # All previous rounds in the current tournament being played.
 previousRounds = []
 # Rounds left to play in the current tournament before a winner is decided
-roundsLeft = None
+roundsLeft = 0
 # If tournament has not begun, we need to run init code
 tournamentBegan = False
 # If tournament is not over we continue to prompt for match results
@@ -33,13 +33,16 @@ tournamentOver = False
 lastTournamentResult = ''
 
 
-## Delete all information regarding the current tournament to make room for a
+## Delete all information regarding the current tournament to make room for the
 ## next tournament.
 def clearTournament():
     global matchesToPlay, currentMatches, previousRounds
     matchesToPlay = 0
-    currentMatches = []
-    previousRounds = []
+    # The following variables track the current tournament. Clear them
+    del currentMatches[:]
+    del previousRounds[:]
+    # Clear the match table in the database, as it tracks matches for one
+    # tournament only.
     tournament.deleteMatches()
 
 ## Clean matches not connected to a tournament
