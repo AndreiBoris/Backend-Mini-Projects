@@ -4,7 +4,7 @@
 #               players. Powered by a SQL database.
 #
 
-# The forumdb module is where the database interface code goes.
+# Interface with SQL database
 import tournament
 
 # HTML templates
@@ -16,7 +16,7 @@ from wsgiref.simple_server import make_server
 from wsgiref import util
 
 # Here we track the number of matches still to be played in the current
-# round of the swiss pairings tournament. This ensures that all rounds of a
+# round of the swiss pairings tournament. This ensures that all matches of a
 # single round are played before new pairings are made for the second round
 matchesToPlay = 0
 # Matches in the current round of the tournament being played
@@ -24,7 +24,7 @@ currentMatches = []
 # All previous rounds in the current tournament being played.
 previousRounds = []
 # Rounds left to play in the current tournament before a winner is decided
-roundsLeft = 0
+roundsLeft = None
 # If tournament has not begun, we need to run init code
 tournamentBegan = False
 # If tournament is not over we continue to prompt for match results
@@ -212,7 +212,7 @@ def addCompletedMatch(matchList, match):
 
 def blankMatch(pairing, i):
     return {
-        'firstPlayerId': pairing[0],wissPairings
+        'firstPlayerId': pairing[0],
         'firstPlayerName': pairing[1],
         'secondPlayerId': pairing[2],
         'secondPlayerName': pairing[3],
