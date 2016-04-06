@@ -36,6 +36,10 @@ lastTournamentResult = ''
 ## Delete all information regarding the current tournament to make room for the
 ## next tournament.
 def clearTournament():
+    '''
+    We call this whenever we want to start a new tournament to be displayed on
+    the view.
+    '''
     global matchesToPlay, currentMatches, previousRounds
     matchesToPlay = 0
     # The following variables track the current tournament. Clear them
@@ -62,42 +66,37 @@ def cleanUp():
 ## Request handler for main page
 def Main(env, resp):
     '''
-    This the main page.
+    This the main page that shows basically nothing.
     '''
-    cleanUp()
+    cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     return templates.HTML_WRAP % ''
 
-## Request handler for posting
+## Request handler for adding a player
 def AddPlayer(env, resp):
-    '''Post handles a submission of the forum's form.
-
-    The message the user posted is saved in the database, then it sends a 302
-    Redirect back to the main page so the user can see their new post.
     '''
-    cleanUp()
+    Add a player into the SQL database.
+    '''
     # Get post content
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
 
-    # If length is zero, post is empty - don't save it.
-    if length > 0:
-        postdata = input.read(length)
-        fields = cgi.parse_qs(postdata)
-        try:
-            player = fields['new-player'][0]
-        except KeyError:
-            print 'No input string for new player.'
-            player = ''
-        # If the post is just whitespace, don't save it.
-        player = player.strip()
-        if len(player) > 9:
-            player = player[:9]
-        if player:
-            # Save it in the database
-            clearTournament()
-            tournament.registerPlayer(player)
+    postdata = input.read(length)
+    fields = cgi.parse_qs(postdata)
+    try:
+        player = fields['new-player'][0]
+    except KeyError:
+        print 'No input string for new player.'
+        player = ''
+    # If the post is just whitespace, don't save it.
+    player = player.strip()
+    if len(player) > 9:
+        player = player[:9]
+    if player:
+        # Save it in the database
+        clearTournament()
+        tournament.registerPlayer(player)
 
     # 302 redirect back to the player standings
     headers = [('Location', '/ShowPlayers'),
@@ -112,7 +111,7 @@ def ShowPlayers(env, resp):
     '''
     GETs the current list of registered players.
     '''
-    cleanUp()
+    cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
     # Get post content
     # get posts from database
     players = tournament.playerStandings()
@@ -247,7 +246,7 @@ def SwissPairings(env, resp):
     Display Swiss pairings for current player set. Works only for 8 people
     currently.
     '''
-    cleanUp()
+    cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
     matchList = ''
     formattedList = ''
     global matchesToPlay, currentMatches, previousRounds, roundsLeft
@@ -370,8 +369,6 @@ def Dispatcher(env, resp):
         resp(status, headers)
         return ['Not Found: ' + page]
 
-
-# Run this bad server only on localhost!
 httpd = make_server('', 8000, Dispatcher)
 print "Serving HTTP on port 8000..."
 httpd.serve_forever()
