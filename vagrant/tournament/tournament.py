@@ -120,7 +120,7 @@ def playerStandings():
             WHERE (tournament.winner = player.id))
         AS tourny_wins
         FROM player
-        ORDER BY wins DESC;
+        ORDER BY wins DESC, tourny_wins DESC;
 ''')
     result = c.fetchall()
     conn.close()
