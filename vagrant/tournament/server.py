@@ -333,6 +333,8 @@ PLAYEDMATCH = '''\
     </li>
 '''
 
+TOURNAMENTROUND = '<ul class="swiss-pairings">%s</ul>'
+
 ## Import previous rounds into swiss tournament tree
 def loadPreviousRounds(formattedList):
     global previousRounds
@@ -347,7 +349,7 @@ def loadPreviousRounds(formattedList):
                                         'first_player_status': firstPlayerStatus,
                                         'second_player': match['secondPlayerName'],
                                         'second_player_status': secondPlayerStatus}
-        formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
+        formattedList += TOURNAMENTROUND % matchList
     return formattedList
 
 def addPendingMatch(matchList, match):
@@ -397,6 +399,18 @@ def determineRoundsNeeded(pairs):
         n += 1
     return n
 
+TOURNAMENTCONCLUSION = '''
+<h2> The winner is %s!</h2>
+<form method="post" action="/ReportTournament">
+<input type="hidden" name="storeTournament" value="store">
+<button class="btn btn-primary" type="submit">Store Tournament</button>
+</form>
+<form method="post" action="/ReportTournament">
+<input type="hidden" name="storeTournament" value="discard">
+<button class="btn btn-danger" type="submit">Discard Tournament</button>
+</form>
+'''
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -439,19 +453,9 @@ def SwissPairings(env, resp):
             lastTournamentResult = loadPreviousRounds('')
             previousRounds = []
             winner = tournament.playerStandings()[0][1]
-            lastTournamentResult += '''
-<h2> The winner is %s!</h2>
-<form method="post" action="/ReportTournament">
-    <input type="hidden" name="storeTournament" value="store">
-    <button class="btn btn-primary" type="submit">Store Tournament</button>
-</form>
-<form method="post" action="/ReportTournament">
-    <input type="hidden" name="storeTournament" value="discard">
-    <button class="btn btn-danger" type="submit">Discard Tournament</button>
-</form>
-''' % (winner)
+            lastTournamentResult += TOURNAMENTCONCLUSION % (winner)
 
-    formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
+    formattedList += TOURNAMENTROUND % matchList
 
     if tournamentOver:
         formattedList = lastTournamentResult
