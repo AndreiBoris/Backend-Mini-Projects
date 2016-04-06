@@ -6,8 +6,10 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+DELETE FROM tournament;
 DELETE FROM match;
 DELETE FROM player;
+DROP TABLE IF EXISTS tournament;
 DROP TABLE IF EXISTS match;
 DROP TABLE IF EXISTS player;
 
@@ -24,5 +26,11 @@ CREATE TABLE match (
   winner INTEGER REFERENCES player(id)
     CONSTRAINT winner_is_player CHECK (winner = first_player
                                         OR winner = second_player),
+  id SERIAL PRIMARY KEY
+);
+
+CREATE TABLE tournament (
+  winner INTEGER REFERENCES player(id),
+  wins INTEGER,
   id SERIAL PRIMARY KEY
 );
