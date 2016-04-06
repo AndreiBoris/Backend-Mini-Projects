@@ -141,14 +141,11 @@ def cleanUp():
     stored and the matches cannot be recorded.
     '''
     standings = tournament.playerStandings()
-    # There are matches currently stored in the database but not in the code
-    if standings[0][3] and not (previousRounds or lastTournamentResult):
-        print standings[0][3]
-        print 'MUST DELETE EVERYTHING'
-        clearTournament()
-    else:
-        print 'Proceed.'
-
+    # There are some players registered
+    if standings:
+        # There are matches currently stored in the database but not in the code
+        if standings[0][3] and not (previousRounds or lastTournamentResult):
+            clearTournament()
 
 ## Request handler for main page
 def Main(env, resp):
@@ -290,7 +287,7 @@ def DeleteOnePlayer(env, resp):
             print 'No playerid'
             print playerid
     else:
-        print 'Length < 0 unfortunately.'
+        print 'Length <= 0 unfortunately.'
 
     # 302 redirect back to the player standings
     headers = [('Location', '/ShowPlayers'),
@@ -445,7 +442,12 @@ def SwissPairings(env, resp):
             lastTournamentResult += '''
 <h2> The winner is %s!</h2>
 <form method="post" action="/ReportTournament">
-    <button class="btn btn-warning" type="submit">Store Tournament</button>
+    <input type="hidden" name="storeTournament" value="store">
+    <button class="btn btn-primary" type="submit">Store Tournament</button>
+</form>
+<form method="post" action="/ReportTournament">
+    <input type="hidden" name="storeTournament" value="discard">
+    <button class="btn btn-danger" type="submit">Discard Tournament</button>
 </form>
 ''' % (winner)
 
@@ -453,9 +455,6 @@ def SwissPairings(env, resp):
 
     if tournamentOver:
         formattedList = lastTournamentResult
-        print formattedList
-        print 'It\'s over buddy!'
-
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
@@ -497,12 +496,16 @@ def ReportTournament(env, resp):
     length = int(env.get('CONTENT_LENGTH', 0))
     postdata = input.read(length)
     fields = cgi.parse_qs(postdata)
+    choice = fields['storeTournament'][0]
+
     global tournamentBegan, tournamentOver, lastTournamentResult
     tournamentOver = False
     tournamentBegan = False
     lastTournamentResult = ''
 
-    tournament.reportTournament()
+    # if the user chose to store the tournament we report it
+    if choice == 'store':
+        tournament.reportTournament()
 
     # 302 redirect back to the swiss pairings
     headers = [('Location', '/ShowPlayers'),
