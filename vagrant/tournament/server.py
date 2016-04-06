@@ -1,113 +1,19 @@
 #
-# DB Forum - a buggy web forum server backed by a good database
+# Tournament - A simplistic swiss pairing tournament that doesn't perform well
+#               with non-power-of-two numbers of players or with more than 8
+#               players. Powered by a SQL database.
 #
 
 # The forumdb module is where the database interface code goes.
 import tournament
 
+# HTML templates
+import templates
+
 # Other modules used to run a web server.
 import cgi
 from wsgiref.simple_server import make_server
 from wsgiref import util
-
-# HTML template for the forum page
-HTML_WRAP = '''\
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Swiss Tournament</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.css">
-  <style>
-    .flexbox {
-        display: flex;
-    }
-    .player-listing {
-      display: flex;
-      font-size: 1.2rem;
-    }
-    .player-listing + .player-listing {
-        border-top: 1px solid #999;
-        }
-    .player-listing__name {
-      width: 15em;
-    }
-    .player-listing__wins {
-      width: 6em;
-    }
-    .player-listing__matches {
-      width: 6em;
-    }
-    .player-listing__delete {
-      margin-left: 0.75em;
-    }
-    .swiss-pairings {
-        display: flex;
-    }
-    .match {
-      display: flex;
-      font-size: 1.2rem;
-      width: 14em;
-    }
-    .match__player {
-      width: 6em;
-    }
-    .match__player__button {
-      width: 100%%;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-</head>
-<body>
-  <div class="container">
-    <div class="row" style="height: 5vh"></div>
-    <div class="row" style="margin-bottom: 1em">
-      <div class="col-xs-3">
-        <button class="btn btn-default" id="add-player">Add Player</button>
-      </div>
-      <div class="col-xs-3">
-        <form method="post" action="/ShowPlayers">
-          <button class="btn btn-default" type="submit">Show Players</button>
-        </form>
-      </div>
-      <div class="col-xs-3">
-        <form method="post" action="/SwissPairings">
-          <button class="btn btn-info" type="submit">Swiss Pairings</button>
-        </form>
-      </div>
-      <div class="col-xs-3">
-        <form method="post" action="/DeletePlayers">
-          <button class="btn btn-danger" type="submit">Delete All</button>
-        </form>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-xs-12">
-        <form class="hidden" id="new-player-form" method="post" action="/AddPlayer">
-          <input name="new-player"  type="text">
-          <button class="btn btn-primary" type="submit">Add</button>
-        </form>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-12">
-        %s
-      </div>
-    </div>
-  </div>
-  <script>
-    var $newPlayerForm = $('#new-player-form');
-    $('#add-player').on('click', function() {
-      $newPlayerForm.toggleClass('hidden');
-    });
-  </script>
-</body>
-</html>
-
-'''
 
 # Here we track the number of matches still to be played in the current
 # round of the swiss pairings tournament. This ensures that all rounds of a
@@ -158,7 +64,7 @@ def Main(env, resp):
     cleanUp()
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
-    return HTML_WRAP % ''
+    return templates.HTML_WRAP % ''
 
 ## Request handler for posting
 def AddPlayer(env, resp):
@@ -196,30 +102,7 @@ def AddPlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
-## HTML template for an individual player
-PLAYER = '''\
-    <li class="player-listing">
-        <div class="player-listing__name">
-            Name: <b>%(name)s</b>
-        </div>
-        <div class="player-listing__wins">
-            Wins: <b>%(wins)s</b>
-        </div>
-        <div class="player-listing__matches">
-            Matches: <b>%(matches)s</b>
-        </div>
-        <div>
-            Tourny Wins: <b>%(tournyWins)s</b>
-        </div>
-        <div class="player-listing__delete">
-            <form method="post" action="/DeleteOnePlayer">
-                <input type="hidden" name="playerid" value="%(playerid)s">
-                <button class="btn btn-danger" type="submit">X</button>
-            </form>
-        </div>
 
-    </li>
-'''
 
 ## Request handler for viewing all registered players
 def ShowPlayers(env, resp):
@@ -232,7 +115,7 @@ def ShowPlayers(env, resp):
     players = tournament.playerStandings()
     playerList = ''
     for player in players:
-        playerList += PLAYER % {'name': player[1],
+        playerList += templates.PLAYER % {'name': player[1],
                                 'wins': player[2],
                                 'matches': player[3],
                                 'playerid': player[0],
@@ -241,7 +124,7 @@ def ShowPlayers(env, resp):
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
-    return HTML_WRAP % formattedList
+    return templates.HTML_WRAP % formattedList
 
 ## Removes all players from database
 def DeletePlayers(env, resp):
@@ -298,65 +181,18 @@ def DeleteOnePlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
-## HTML template for a match
-PENDINGMATCH = '''\
-    <li class="match">
-        <div class="match__player">
-            <form method="post" action="/ReportMatch">
-                <input type="hidden" name="winnerid" value="%(first_player_id)s">
-                <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info match__player__button" type="submit">%(first_player)s</button>
-            </form>
-        </div>
-        <div class="match__vs">
-            <b>v.</b>
-        </div>
-        <div class="match__player">
-            <form method="post" action="/ReportMatch">
-                <input type="hidden" name="winnerid" value="%(second_player_id)s">
-                <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info match__player__button" type="submit">%(second_player)s</button>
-            </form>
-        </div>
-    </li>
-'''
-
-## HTML template for a played match
-PLAYEDMATCH = '''\
-    <li class="match">
-        <div class="match__player">
-            <button class="btn btn-%(first_player_status)s match__player__button" type="submit">%(first_player)s</button>
-        </div>
-        <div class="match__vs">
-            <b>v.</b>
-        </div>
-        <div class="match__player">
-            <button class="btn btn-%(second_player_status)s match__player__button" type="submit">%(second_player)s</button>
-        </div>
-    </li>
-'''
-
-TOURNAMENTROUND = '<ul class="swiss-pairings">%s</ul>'
-
 ## Import previous rounds into swiss tournament tree
 def loadPreviousRounds(formattedList):
     global previousRounds
     for round in previousRounds:
         matchList = ''
         for match in round:
-            if match['winner'] == match['firstPlayerId']:
-                firstPlayerStatus, secondPlayerStatus = 'success', 'default'
-            else:
-                secondPlayerStatus, firstPlayerStatus = 'success', 'default'
-            matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
-                                        'first_player_status': firstPlayerStatus,
-                                        'second_player': match['secondPlayerName'],
-                                        'second_player_status': secondPlayerStatus}
-        formattedList += TOURNAMENTROUND % matchList
+            matchList = addCompletedMatch(matchList, match)
+        formattedList += templates.TOURNAMENTROUND % matchList
     return formattedList
 
 def addPendingMatch(matchList, match):
-    matchList += PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
+    matchList += templates.PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
                                 'first_player': match['firstPlayerName'],
                                 'second_player_id': match['secondPlayerId'],
                                 'second_player': match['secondPlayerName'],
@@ -368,7 +204,7 @@ def addCompletedMatch(matchList, match):
         firstPlayerStatus, secondPlayerStatus = 'success', 'default'
     else:
         secondPlayerStatus, firstPlayerStatus = 'success', 'default'
-    matchList += PLAYEDMATCH % {'first_player': match['firstPlayerName'],
+    matchList += templates.PLAYEDMATCH % {'first_player': match['firstPlayerName'],
                                 'first_player_status': firstPlayerStatus,
                                 'second_player': match['secondPlayerName'],
                                 'second_player_status': secondPlayerStatus}
@@ -376,7 +212,7 @@ def addCompletedMatch(matchList, match):
 
 def blankMatch(pairing, i):
     return {
-        'firstPlayerId': pairing[0],
+        'firstPlayerId': pairing[0],wissPairings
         'firstPlayerName': pairing[1],
         'secondPlayerId': pairing[2],
         'secondPlayerName': pairing[3],
@@ -401,20 +237,6 @@ def determineRoundsNeeded(pairs):
     while pairs > 2**n:
         n += 1
     return n
-
-TOURNAMENTCONCLUSION = '''\
-<h2> The winner is %s!</h2>
-<div class="flexbox">
-    <form method="post" action="/ReportTournament">
-        <input type="hidden" name="storeTournament" value="store">
-        <button class="btn btn-primary" type="submit">Store Tournament</button>
-    </form>
-    <form method="post" action="/ReportTournament">
-        <input type="hidden" name="storeTournament" value="discard">
-        <button class="btn btn-danger" type="submit">Discard Tournament</button>
-    </form>
-</div>
-'''
 
 ## View the tournament mode
 def SwissPairings(env, resp):
@@ -458,16 +280,16 @@ def SwissPairings(env, resp):
             lastTournamentResult = loadPreviousRounds('')
             previousRounds = []
             winner = tournament.playerStandings()[0][1]
-            lastTournamentResult += TOURNAMENTCONCLUSION % (winner)
+            lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
 
-    formattedList += TOURNAMENTROUND % matchList
+    formattedList += templates.TOURNAMENTROUND % matchList
 
     if tournamentOver:
         formattedList = lastTournamentResult
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
-    return HTML_WRAP % formattedList
+    return templates.HTML_WRAP % formattedList
 
 ## Report a winner and loser and store it in the global currentMatches
 def ReportMatch(env, resp):
