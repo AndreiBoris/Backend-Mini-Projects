@@ -19,6 +19,9 @@ HTML_WRAP = '''\
   <title>Swiss Tournament</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.css">
   <style>
+    .flexbox {
+        display: flex;
+    }
     .player-listing {
       display: flex;
       font-size: 1.2rem;
@@ -399,16 +402,18 @@ def determineRoundsNeeded(pairs):
         n += 1
     return n
 
-TOURNAMENTCONCLUSION = '''
+TOURNAMENTCONCLUSION = '''\
 <h2> The winner is %s!</h2>
-<form method="post" action="/ReportTournament">
-<input type="hidden" name="storeTournament" value="store">
-<button class="btn btn-primary" type="submit">Store Tournament</button>
-</form>
-<form method="post" action="/ReportTournament">
-<input type="hidden" name="storeTournament" value="discard">
-<button class="btn btn-danger" type="submit">Discard Tournament</button>
-</form>
+<div class="flexbox">
+    <form method="post" action="/ReportTournament">
+        <input type="hidden" name="storeTournament" value="store">
+        <button class="btn btn-primary" type="submit">Store Tournament</button>
+    </form>
+    <form method="post" action="/ReportTournament">
+        <input type="hidden" name="storeTournament" value="discard">
+        <button class="btn btn-danger" type="submit">Discard Tournament</button>
+    </form>
+</div>
 '''
 
 ## View the tournament mode
