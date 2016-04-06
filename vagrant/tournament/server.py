@@ -38,15 +38,15 @@ HTML_WRAP = '''\
     .swiss-pairings {
         display: flex;
     }
-    .pending-match {
+    .match {
       display: flex;
       font-size: 1.2rem;
-      width: 13em;
+      width: 14em;
     }
-    .pending-match__player {
-      width: 5.5em;
+    .match__player {
+      width: 6em;
     }
-    .pending-match__player__button {
+    .match__player__button {
       width: 100%%;
     }
     .hidden {
@@ -152,6 +152,8 @@ def AddPlayer(env, resp):
             player = ''
         # If the post is just whitespace, don't save it.
         player = player.strip()
+        if len(player) > 9:
+            player = player[:9]
         if player:
             # Save it in the database
             clearTournament()
@@ -262,22 +264,22 @@ def DeleteOnePlayer(env, resp):
 
 ## HTML template for a match
 PENDINGMATCH = '''\
-    <li class="pending-match">
-        <div class="pending-match__player">
+    <li class="match">
+        <div class="match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(first_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info pending-match__player__button" type="submit">%(first_player)s</button>
+                <button class="btn btn-info match__player__button" type="submit">%(first_player)s</button>
             </form>
         </div>
-        <div class="pending-match__vs">
+        <div class="match__vs">
             <b>v.</b>
         </div>
-        <div class="pending-match__player">
+        <div class="match__player">
             <form method="post" action="/ReportMatch">
                 <input type="hidden" name="winnerid" value="%(second_player_id)s">
                 <input type="hidden" name="matchindex" value="%(match_index)s">
-                <button class="btn btn-info pending-match__player__button" type="submit">%(second_player)s</button>
+                <button class="btn btn-info match__player__button" type="submit">%(second_player)s</button>
             </form>
         </div>
     </li>
@@ -285,15 +287,15 @@ PENDINGMATCH = '''\
 
 ## HTML template for a played match
 PLAYEDMATCH = '''\
-    <li class="pending-match">
-        <div class="pending-match__player">
-            <button class="btn btn-%(first_player_status)s pending-match__player__button" type="submit">%(first_player)s</button>
+    <li class="match">
+        <div class="match__player">
+            <button class="btn btn-%(first_player_status)s match__player__button" type="submit">%(first_player)s</button>
         </div>
-        <div class="pending-match__vs">
+        <div class="match__vs">
             <b>v.</b>
         </div>
-        <div class="pending-match__player">
-            <button class="btn btn-%(second_player_status)s pending-match__player__button" type="submit">%(second_player)s</button>
+        <div class="match__player">
+            <button class="btn btn-%(second_player_status)s match__player__button" type="submit">%(second_player)s</button>
         </div>
     </li>
 '''
@@ -356,6 +358,17 @@ def prepareForNextRound():
     previousRounds.append(currentMatches)
     currentMatches = []
 
+roundsLeft = 0
+tournamentBegan = False
+tournamentOver = False
+lastTournamentResult = ''
+
+def determineRoundsNeeded(pairs):
+    n = 0
+    while pairs > 2**n:
+        n += 1
+    return n
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -364,28 +377,45 @@ def SwissPairings(env, resp):
     '''
     matchList = ''
     formattedList = ''
-    global matchesToPlay, currentMatches, previousRounds
-    if matchesToPlay == 0:
-        if currentMatches:
-            prepareForNextRound()
-        i = 0
-        pairings = tournament.swissPairings()
-        matchesToPlay = len(pairings)
-        for pairing in pairings:
-            currentMatches.append(blankMatch(pairing, i))
-            i += 1
-        formattedList = loadPreviousRounds(formattedList)
-        for match in currentMatches:
-            matchList = addPendingMatch(matchList, match)
-    else:
-        formattedList = loadPreviousRounds(formattedList)
-        for match in currentMatches:
-            if match['alreadyPlayed']:
-                matchList = addCompletedMatch(matchList, match)
-            else:
+    global matchesToPlay, currentMatches, previousRounds, roundsLeft
+    global tournamentBegan, tournamentOver, lastTournamentResult
+    if not tournamentBegan:
+        tournamentBegan = True
+        pairs = len(tournament.swissPairings())
+        roundsLeft = determineRoundsNeeded(pairs)
+    if not tournamentOver:
+        if roundsLeft and matchesToPlay == 0: # new round
+            if currentMatches: # We already have a round saved
+                prepareForNextRound() # Clear matches and insert into database
+                roundsLeft -= 1
+            i = 0 # index for the matches for the current round
+            pairings = tournament.swissPairings()
+            matchesToPlay = len(pairings)
+            for pairing in pairings:
+                currentMatches.append(blankMatch(pairing, i))
+                i += 1
+            formattedList = loadPreviousRounds(formattedList)
+            for match in currentMatches:
                 matchList = addPendingMatch(matchList, match)
+        elif matchesToPlay > 0:
+            formattedList = loadPreviousRounds(formattedList)
+            for match in currentMatches:
+                if match['alreadyPlayed']:
+                    matchList = addCompletedMatch(matchList, match)
+                else:
+                    matchList = addPendingMatch(matchList, match)
+        else:
+            tournamentOver = True
+            prepareForNextRound()
+            lastTournamentResult = loadPreviousRounds('')
 
     formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
+
+    if tournamentOver:
+        formattedList = lastTournamentResult
+        print formattedList
+        print 'It\'s over buddy!'
+
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
