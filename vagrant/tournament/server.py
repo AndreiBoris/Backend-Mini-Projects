@@ -106,15 +106,6 @@ HTML_WRAP = '''\
 
 '''
 
-## Request handler for main page
-def Main(env, resp):
-    '''
-    This the main page.
-    '''
-    headers = [('Content-type', 'text/html')]
-    resp('200 OK', headers)
-    return HTML_WRAP % ''
-
 # Here we track the number of matches still to be played in the current
 # round of the swiss pairings tournament. This ensures that all rounds of a
 # single round are played before new pairings are made for the second round
@@ -123,6 +114,15 @@ matchesToPlay = 0
 currentMatches = []
 # All previous rounds in the current tournament being played.
 previousRounds = []
+# Rounds left to play in the current tournament before a winner is decided
+roundsLeft = 0
+# If tournament has not begun, we need to run init code
+tournamentBegan = False
+# If tournament is not over we continue to prompt for match results
+tournamentOver = False
+# If the tournament is over, store the round info for review.
+lastTournamentResult = ''
+
 
 ## Delete all information regarding the current tournament to make room for a
 ## next tournament.
@@ -133,6 +133,33 @@ def clearTournament():
     previousRounds = []
     tournament.deleteMatches()
 
+## Clean matches not connected to a tournament
+def cleanUp():
+    '''
+    Clear all matches stored in the database if there are no matches stored in
+    the python code. This means that the tournament was closed before it was
+    stored and the matches cannot be recorded.
+    '''
+    standings = tournament.playerStandings()
+    # There are matches currently stored in the database but not in the code
+    if standings[0][3] and not (previousRounds or lastTournamentResult):
+        print standings[0][3]
+        print 'MUST DELETE EVERYTHING'
+        clearTournament()
+    else:
+        print 'Proceed.'
+
+
+## Request handler for main page
+def Main(env, resp):
+    '''
+    This the main page.
+    '''
+    cleanUp()
+    headers = [('Content-type', 'text/html')]
+    resp('200 OK', headers)
+    return HTML_WRAP % ''
+
 ## Request handler for posting
 def AddPlayer(env, resp):
     '''Post handles a submission of the forum's form.
@@ -140,6 +167,7 @@ def AddPlayer(env, resp):
     The message the user posted is saved in the database, then it sends a 302
     Redirect back to the main page so the user can see their new post.
     '''
+    cleanUp()
     # Get post content
     input = env['wsgi.input']
     length = int(env.get('CONTENT_LENGTH', 0))
@@ -198,6 +226,7 @@ def ShowPlayers(env, resp):
     '''
     GETs the current list of registered players.
     '''
+    cleanUp()
     # Get post content
     # get posts from database
     players = tournament.playerStandings()
@@ -365,11 +394,6 @@ def prepareForNextRound():
     previousRounds.append(currentMatches)
     currentMatches = []
 
-roundsLeft = 0
-tournamentBegan = False
-tournamentOver = False
-lastTournamentResult = ''
-
 def determineRoundsNeeded(pairs):
     n = 0
     while pairs > 2**n:
@@ -382,6 +406,7 @@ def SwissPairings(env, resp):
     Display Swiss pairings for current player set. Works only for 8 people
     currently.
     '''
+    cleanUp()
     matchList = ''
     formattedList = ''
     global matchesToPlay, currentMatches, previousRounds, roundsLeft
