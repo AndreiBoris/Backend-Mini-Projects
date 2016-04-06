@@ -408,6 +408,14 @@ def SwissPairings(env, resp):
             tournamentOver = True
             prepareForNextRound()
             lastTournamentResult = loadPreviousRounds('')
+            previousRounds = []
+            winner = tournament.playerStandings()[0][1]
+            lastTournamentResult += '''
+<h2> The winner is %s!</h2>
+<form method="post" action="/ReportTournament">
+    <button class="btn btn-warning" type="submit">Store Tournament</button>
+</form>
+''' % (winner)
 
     formattedList += '<ul class="swiss-pairings">%s</ul>' % matchList
 
@@ -440,10 +448,32 @@ def ReportMatch(env, resp):
 
     currentMatches[index]['winner'] = winnerid
     currentMatches[index]['alreadyPlayed'] = True
-    # tournament.reportMatch(winnerid, loserid)
 
     # 302 redirect back to the swiss pairings
     headers = [('Location', '/SwissPairings'),
+               ('Content-type', 'text/plain')]
+    resp('302 REDIRECT', headers)
+    return ['Redirecting']
+
+## Report the tournament that had just played out
+def ReportTournament(env, resp):
+    '''
+    Report a tournament and clear matches for a next tournament.
+    '''
+    # Get post content
+    input = env['wsgi.input']
+    length = int(env.get('CONTENT_LENGTH', 0))
+    postdata = input.read(length)
+    fields = cgi.parse_qs(postdata)
+    global tournamentBegan, tournamentOver, lastTournamentResult
+    tournamentOver = False
+    tournamentBegan = False
+    lastTournamentResult = ''
+
+    tournament.reportTournament()
+
+    # 302 redirect back to the swiss pairings
+    headers = [('Location', '/ShowPlayers'),
                ('Content-type', 'text/plain')]
     resp('302 REDIRECT', headers)
     return ['Redirecting']
@@ -455,7 +485,8 @@ DISPATCH = {'': Main,
             'DeletePlayers': DeletePlayers,
             'DeleteOnePlayer': DeleteOnePlayer,
             'SwissPairings': SwissPairings,
-            'ReportMatch': ReportMatch
+            'ReportMatch': ReportMatch,
+            'ReportTournament': ReportTournament
 	    }
 
 ## Dispatcher forwards requests according to the DISPATCH table.
