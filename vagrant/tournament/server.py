@@ -177,15 +177,14 @@ def DeleteOnePlayer(env, resp):
     except KeyError:
         print 'There is no player id present.'
         playerid = ''
-    # If the player id is just white space, don't perform the post request
+    # If the player id is just white space, delete nothing.
     playerid = playerid.strip()
     if playerid:
         # Delete the player from the database
         tournament.deletePlayer(playerid)
-        clearTournament()
+        clearTournament() # Drop current tournament since player roster has changed
     else:
-        print 'No playerid'
-        print playerid
+        print 'No playerid to delete.'
 
     # 302 redirect back to the player standings
     headers = [('Location', '/ShowPlayers'),
@@ -193,8 +192,8 @@ def DeleteOnePlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
-## Import previous rounds into swiss tournament tree
 def loadPreviousRounds(formattedList):
+    '''Return formattedList except with all previousRounds appended to it'''
     global previousRounds
     for round in previousRounds:
         matchList = ''
@@ -204,6 +203,8 @@ def loadPreviousRounds(formattedList):
     return formattedList
 
 def addPendingMatch(matchList, match):
+    '''Return matchList except with a unplayed match template holding the
+    information in match attached to it.'''
     matchList += templates.PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
                                 'first_player': match['firstPlayerName'],
                                 'second_player_id': match['secondPlayerId'],
@@ -212,6 +213,8 @@ def addPendingMatch(matchList, match):
     return matchList
 
 def addCompletedMatch(matchList, match):
+    '''Return matchList except with a reported match template holding the
+    information inside match attached to it.'''
     if match['winner'] == match['firstPlayerId']:
         firstPlayerStatus, secondPlayerStatus = 'success', 'default'
     else:
@@ -223,6 +226,11 @@ def addCompletedMatch(matchList, match):
     return matchList
 
 def blankMatch(pairing, i):
+    '''Return a dictionary with appropriate fields filled in using the
+    information from pairing and the index i
+
+    NOTE: index is used ReportMatch to change the alreadyPlayed attribute of the
+    correct match.'''
     return {
         'firstPlayerId': pairing[0],
         'firstPlayerName': pairing[1],
@@ -235,16 +243,28 @@ def blankMatch(pairing, i):
 
 ## Push completed rounds to the database and clear currentMatches
 def prepareForNextRound():
+    '''Walk through each match in the currentMatches list and report each of
+    these matches, entering them into the database.'''
     global previousRounds, currentMatches
     for match in currentMatches:
+        # grab ids of the first player, second player, and the winner to
+        # determine the winner and the loser
         a, b, w = int(match['firstPlayerId']), int(match['secondPlayerId']), int(match['winner'])
         winner = a if a == w else b
         loser = b if a == w else a
         tournament.reportMatch(winner, loser)
+    # Append the currentMatches list to the previousRounds list, creating a list
+    # of lists inside previousRounds
     previousRounds.append(currentMatches)
-    currentMatches = []
+    # Empty the currentMatches to hold the matches for the next round.
+    del currentMatches[:]
 
+# Helper function
 def determineRoundsNeeded(pairs):
+    '''Use the number of pairs of players in the tournament to determine the
+    number of rounds that need to be played before a champion can be decided.
+    The number is one (1) smaller than might be expected due to the way rounds
+    are decremented inside SwissPairings()'''
     n = 0
     while pairs > 2**n:
         n += 1
