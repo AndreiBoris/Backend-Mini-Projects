@@ -151,7 +151,6 @@ def reportTournament():
     tournament.
     """
     standings = playerStandings()
-    print 'REPORT TOURNAMENT:'
     topWins = standings[0][2]
     winner = standings[0][0]
     winnerName = None
@@ -165,8 +164,6 @@ def reportTournament():
         conn.commit()
         conn.close()
         deleteMatches()
-        winnerName = standings[0][1]
-    return winnerName
 
 
 def swissPairings():
