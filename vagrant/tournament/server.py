@@ -255,7 +255,7 @@ def prepareForNextRound():
         tournament.reportMatch(winner, loser)
     # Append the currentMatches list to the previousRounds list, creating a list
     # of lists inside previousRounds
-    previousRounds.append(currentMatches)
+    previousRounds.append(list(currentMatches))
     # Empty the currentMatches to hold the matches for the next round.
     del currentMatches[:]
 
@@ -269,6 +269,10 @@ def determineRoundsNeeded(pairs):
     while pairs > 2**n:
         n += 1
     return n
+
+## Get tournament winner
+def getWinner():
+    return tournament.playerStandings()[0][1]
 
 ## View the tournament mode
 def SwissPairings(env, resp):
@@ -310,8 +314,8 @@ def SwissPairings(env, resp):
             tournamentOver = True
             prepareForNextRound()
             lastTournamentResult = loadPreviousRounds('')
-            previousRounds = []
-            winner = tournament.playerStandings()[0][1]
+            del previousRounds[:]
+            winner = getWinner()
             lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
 
     formattedList += templates.TOURNAMENTROUND % matchList
