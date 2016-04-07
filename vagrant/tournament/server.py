@@ -413,9 +413,6 @@ def SwissPairings(env, resp):
     Display Swiss pairings and tournament progress (if applicable) for the
     current player set.
     '''
-    # Remove matches in database if not stored in python (due to unsubmitted
-    # tournament)
-    cleanUp()
     # The list of matches to be placed inside roundList
     matchList = ''
     # The list of all rounds, played previously and currently being played
@@ -433,22 +430,34 @@ def SwissPairings(env, resp):
     # If a winner is not determined after roundsLeft and matchestToPlay has reached
     # 0, a tie breaker round will need to be played
     needTieBreakerRound = False
-    if not tournamentBegan:
-        initTournament()
+
+    # Remove matches in database if not stored in python (due to unsubmitted
+    # tournament)
+    cleanUp()
+
+    if not tournamentBegan: # new tournament
+        initTournament() # calculate rounds needed to determine chamption
+
     if not tournamentOver:
         if roundsLeft and matchesToPlay == 0: # new round
-            matchList = handleFirstRound()
+            matchList = handleFirstRound() # get string display new round
         elif matchesToPlay > 0: # not a new round
-            matchList = handleOtherRounds()
+            matchList = handleOtherRounds() # get string display current round
         else: # no rounds or matches left to play
+            # handleEndOfTourny adds an extra round if we needTieBreakerRound,
+            # and if not, it sets tournamentOver and lastTournamentResult
             needTieBreakerRound = handleEndOfTourny(needTieBreakerRound)
-
-    roundList = loadPreviousRounds(roundList)
-    roundList += templates.TOURNAMENTROUND % matchList
+        # Add previous rounds to roundList
+        roundList = loadPreviousRounds(roundList)
+        # Add current round to roundList
+        roundList += templates.TOURNAMENTROUND % matchList
 
     if tournamentOver:
+        # we'll just be display previous rounds from this tournament
         roundList = lastTournamentResult
 
+    # If we need a tiebreaker round, we have to reload SwissPairings() to get
+    # back into the 'if not tournamentOver' handler (since we added 1 to roundsLeft)
     if needTieBreakerRound:
         needTieBreakerRound = False
         # 302 redirect back to the player standings
@@ -456,9 +465,10 @@ def SwissPairings(env, resp):
                    ('Content-type', 'text/plain')]
         resp('302 REDIRECT', headers)
         return ['Redirecting']
-    else:
+    else: # display the current tournament
         headers = [('Content-type', 'text/html')]
         resp('200 OK', headers)
+        # Format previous and current rounds into HTML_WRAP
         return templates.HTML_WRAP % roundList
 
 ## Report a winner and loser and store it in the global currentMatches
