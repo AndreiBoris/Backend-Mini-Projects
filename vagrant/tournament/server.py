@@ -133,12 +133,12 @@ def ShowPlayers(env, resp):
                                 'playerid': player[0],
                                 'tournyWins': player[4] or 0}
     # playerList needs to be inside <ul> tags as each player is a <li> element
-    formattedList = '<ul>%s</ul>' % playerList
+    roundList = '<ul>%s</ul>' % playerList
 
     headers = [('Content-type', 'text/html')]
     resp('200 OK', headers)
     # Fill the main template with the list of players
-    return templates.HTML_WRAP % formattedList
+    return templates.HTML_WRAP % roundList
 
 ## Removes all players from database
 def DeletePlayers(env, resp):
@@ -191,19 +191,36 @@ def DeleteOnePlayer(env, resp):
     resp('302 REDIRECT', headers)
     return ['Redirecting']
 
-def loadPreviousRounds(formattedList):
-    '''Return formattedList except with all previousRounds appended to it'''
-    global previousRounds
-    for round in previousRounds:
-        matchList = ''
+## Append all previous tournament rounds to a formatted HTML list
+def loadPreviousRounds(roundList):
+    '''Return roundList except with all previousRounds appended to it'''
+    global previousRounds # rounds already played in this tournament
+    for round in previousRounds: # each round is a list containing objects
+        matchList = '' # string containing HTML for all arounds in a round
         for match in round:
+            # previous rounds already completed, so we concatenate the string
+            # matchList with the HTML for each match appropraitely formatted
             matchList = addCompletedMatch(matchList, match)
-        formattedList += templates.TOURNAMENTROUND % matchList
-    return formattedList
+        # Put all the matches for a given round inside <ul> tags
+        roundList += templates.TOURNAMENTROUND % matchList
+    # All rounds (<ul>s) in one string
+    return roundList
 
+## Attach the formatted HTML of the information in match to the matchList
 def addPendingMatch(matchList, match):
     '''Return matchList except with a unplayed match template holding the
-    information in match attached to it.'''
+    information in match attached to it.
+
+    Parameters
+    -----------
+    matchList : string
+                Empty string or a string containing formatted HTML with previous
+                matches in the current tournament round.
+    match : dictionary
+                A dictionary with attributes describing the players of a match
+                and the index of the match in the given tournament round. See
+                createMatch()
+    '''
     matchList += templates.PENDINGMATCH % {'first_player_id': match['firstPlayerId'],
                                 'first_player': match['firstPlayerName'],
                                 'second_player_id': match['secondPlayerId'],
@@ -211,25 +228,51 @@ def addPendingMatch(matchList, match):
                                 'match_index': match['index']}
     return matchList
 
+## Attach the formatted HTML of the information in match to the matchList, such
+## that it displays the winner and loser of the match.
 def addCompletedMatch(matchList, match):
     '''Return matchList except with a reported match template holding the
-    information inside match attached to it.'''
+    information inside match attached to it.
+
+    Parameters
+    -----------
+    matchList : string
+                Empty string or a string containing formatted HTML with previous
+                matches in the current tournament round.
+    match : dictionary
+                A dictionary with attributes describing the players of a match
+                and the id of the winner. See createMatch()
+    '''
+    # If the firstPlayer is the winner, give them the winner graphic. Otherwise,
+    # give it to the secondPlayer
     if match['winner'] == match['firstPlayerId']:
         firstPlayerStatus, secondPlayerStatus = 'success', 'default'
     else:
         secondPlayerStatus, firstPlayerStatus = 'success', 'default'
+    # Add the formatted HTML of the match to the matchList
     matchList += templates.PLAYEDMATCH % {'first_player': match['firstPlayerName'],
                                 'first_player_status': firstPlayerStatus,
                                 'second_player': match['secondPlayerName'],
                                 'second_player_status': secondPlayerStatus}
     return matchList
 
-def blankMatch(pairing, i):
+## Use a pairing result from tournament.playerStandings() and an index specific
+## only to the round that this match is in to form a match object.
+def createMatch(pairing, i):
     '''Return a dictionary with appropriate fields filled in using the
     information from pairing and the index i
 
     NOTE: index is used ReportMatch to change the alreadyPlayed attribute of the
-    correct match.'''
+    correct match.
+
+    Parameters
+    -----------
+    pairing : tuple
+                holds information about the players facing each other in a match
+    i : integer
+                index value used to refer to the match through an interface that
+                does not see the list
+    '''
     return {
         'firstPlayerId': pairing[0],
         'firstPlayerName': pairing[1],
@@ -262,88 +305,140 @@ def prepareForNextRound():
 def determineRoundsNeeded(pairs):
     '''Use the number of pairs of players in the tournament to determine the
     number of rounds that need to be played before a champion can be decided.
-    The number is one (1) smaller than might be expected due to the way rounds
-    are decremented inside SwissPairings()'''
-    n = 0
+
+    More than 2 pairs require 3 rounds, more than 4 pairs require 4 rounds,
+    more than 8 pairs require 5 rounds, etc.
+
+    Parameters
+    -----------
+    pairs : integer
+                number of matches per round (pairs of players facing each other)
+    '''
+    n = 1
     while pairs > 2**n:
         n += 1
-    return n
+    return n + 1
 
-## Get tournament winner
+## Determine whether there is a winner currently, and if so, the name of that
+## winner.
 def getWinner():
     '''Return a bool signifying whether a winner could be determined, and, if
     True, the string of the winner's name'''
     standings = tournament.playerStandings()
-    length = len(standings)
     topScore = standings[0][2]
+    # If the second best score is equal to the top score, we don't have a winner
     if standings[1][2] == topScore:
-        return False, ''
+        return False, 'undetermined'
     else:
+        # Return the name of the person with the top score
         return True, standings[0][1]
 
-goAgain = False
+## Set up initial conditions of the tournament
+def initTournament():
+    '''Set up a tournament with a correct number of rounds'''
+    global tournamentBegan, roundsLeft
+    tournamentBegan = True
+    # Determine the number of rounds that need to be played based on the number
+    # of swiss pairings.
+    roundsLeft = determineRoundsNeeded(len(tournament.swissPairings()))
 
-import pdb
+## Handle the first match of a round with appropraite set up for the rest of the
+## round
+def handleFirstRound():
+    '''Return matchList for the current set of matches at the beginning of a new
+    round.
+    '''
+    global roundsLeft, matchesToPlay, currentMatches
+    matchList = ''
+
+    prepareForNextRound() # Clear currentMatches and insert into database
+
+    # A match must be played for every swiss pairing
+    pairings = tournament.swissPairings()
+    matchesToPlay = len(pairings)
+
+    i = 0 # index for the matches for the current round
+    # use the information in pairings to create a currentMatches list of
+    # dictionaries holding information about each match
+    for pairing in pairings:
+        currentMatches.append(createMatch(pairing, i))
+        # Keep track of index to determine which round users are interacting
+        # with.
+        i += 1
+    # Append all previous match results to roundList
+    # Add all current matches to the match list
+    for match in currentMatches:
+        matchList = addPendingMatch(matchList, match)
+    # We've now handled the round, all that is left is to play matchesToPlay
+    # matches
+    roundsLeft -= 1
+    return matchList
+
+def handleOtherRounds():
+    '''Return matchList for the current set of matches at any point of an
+    ongoing round.'''
+    global currentMatches
+    matchList = ''
+    for match in currentMatches:
+        if match['alreadyPlayed']:
+            matchList = addCompletedMatch(matchList, match)
+        else:
+            matchList = addPendingMatch(matchList, match)
+    return matchList
 
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
-    Display Swiss pairings for current player set. Works only for 8 people
-    currently.
+    Display Swiss pairings and tournament progress (if applicable) for the
+    current player set.
     '''
-    cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
+    # Remove matches in database if not stored in python (due to unsubmitted
+    # tournament)
+    cleanUp()
+    # The list of matches to be placed inside roundList
     matchList = ''
-    formattedList = ''
-    global goAgain
+    # The list of all rounds, played previously and currently being played
+    roundList = ''
+    # matchestToPlay: integer - number of matches we will have to play in this round
+    # currentMatches: list - the matches that are part of the current round
+    # previousRounds: list - each previous round was previously the list of
+    #                         currentMatches
+    # roundsLeft: integer - number of rounds we will have to play to determine winner
     global matchesToPlay, currentMatches, previousRounds, roundsLeft
+    # tournamentBegan: bool - if false, need to init tournament
+    # tournamentOver: bool - if false, keep playing rounds, else display result
+    # lastTournamentResult: string - if tournamentOver, display this
     global tournamentBegan, tournamentOver, lastTournamentResult
+    # If a winner is not determined after roundsLeft and matchestToPlay has reached
+    # 0, a tie breaker round will need to be played
+    needTieBreakerRound = False
     if not tournamentBegan:
-        tournamentBegan = True
-        pairs = len(tournament.swissPairings())
-        roundsLeft = determineRoundsNeeded(pairs)
+        initTournament()
     if not tournamentOver:
         if roundsLeft and matchesToPlay == 0: # new round
-            if currentMatches: # We already have a round saved
-                prepareForNextRound() # Clear matches and insert into database
-                roundsLeft -= 1
-            if goAgain:
-                goAgain = False
-                roundsLeft -= 1
-            i = 0 # index for the matches for the current round
-            pairings = tournament.swissPairings()
-            matchesToPlay = len(pairings)
-            for pairing in pairings:
-                currentMatches.append(blankMatch(pairing, i))
-                i += 1
-            formattedList = loadPreviousRounds(formattedList)
-            for match in currentMatches:
-                matchList = addPendingMatch(matchList, match)
-        elif matchesToPlay > 0:
-            formattedList = loadPreviousRounds(formattedList)
-            for match in currentMatches:
-                if match['alreadyPlayed']:
-                    matchList = addCompletedMatch(matchList, match)
-                else:
-                    matchList = addPendingMatch(matchList, match)
-        else:
-            prepareForNextRound()
+            matchList = handleFirstRound()
+        elif matchesToPlay > 0: # not a new round
+            matchList = handleOtherRounds()
+        else: # no rounds or matches left to play
+            prepareForNextRound() # submit currently pending match
             winnerExists, winner = getWinner()
             if winnerExists:
                 tournamentOver = True
-                lastTournamentResult = loadPreviousRounds('')
+                lastTournamentResult = loadPreviousRounds(roundList)
                 del previousRounds[:]
                 lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
             else:
-                formattedList = loadPreviousRounds(formattedList)
                 roundsLeft += 1
-                goAgain = True
+                needTieBreakerRound = True
 
-    formattedList += templates.TOURNAMENTROUND % matchList
+    roundList = loadPreviousRounds(roundList)
+    roundList += templates.TOURNAMENTROUND % matchList
 
     if tournamentOver:
-        formattedList = lastTournamentResult
+        roundList = lastTournamentResult
 
-    if goAgain:
+    if needTieBreakerRound:
+        needTieBreakerRound = False
         # 302 redirect back to the player standings
         headers = [('Location', '/SwissPairings'),
                    ('Content-type', 'text/plain')]
@@ -352,7 +447,7 @@ def SwissPairings(env, resp):
     else:
         headers = [('Content-type', 'text/html')]
         resp('200 OK', headers)
-        return templates.HTML_WRAP % formattedList
+        return templates.HTML_WRAP % roundList
 
 ## Report a winner and loser and store it in the global currentMatches
 def ReportMatch(env, resp):
