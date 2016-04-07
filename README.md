@@ -71,11 +71,13 @@ a new round will start IF a winner has not already been decided. A winner is
 decided according to Swiss Tournament fashion and is the player with the most
 wins after the correct number of rounds have been played:
 
-* Number of Rounds | Number of Players
-* .....1...................2
-* .....2...................3,4
-* .....3...................5,6,7,8
-* .....4...................9-16
+```
+Number of Rounds | Number of Players
+        1                 2
+        2                 3,4
+        3                 5,6,7,8
+        4                 9-16
+```
 
 And so on.
 
