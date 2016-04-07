@@ -17,7 +17,7 @@ If you want to view the project and interact with it
 * Clone this repository:
 
 ```
-git clone https://github.com/AndreiCommunication/fullstack-nanodegree-vm.git thisvm
+git clone https://github.com/AndreiCommunication/SQL-Python-Tournament.git thisvm
 cd thisvm
 ```
 
@@ -71,15 +71,26 @@ a new round will start IF a winner has not already been decided. A winner is
 decided according to Swiss Tournament fashion and is the player with the most
 wins after the correct number of rounds have been played:
 
-Number of Rounds | Number of Players
-      1                   2
-      2                   3,4
-      3                   5,6,7,8
-      4                   9-16
+* Number of Rounds | Number of Players
+*      1                   2
+*      2                   3,4
+*      3                   5,6,7,8
+*      4                   9-16
 
 And so on.
 
-**Note**: see issues in this repository for problems with this.
+### Issues
+
+* If more than 8 players are included in the tournament, problems with the way
+the tournament is displayed arise. No effort was made to combat this as the
+purpose of the project was not related to the frontend, but if someone wants
+to use this project with this issue addressed, I'd be glad to address it.
+
+* If an odd number of players are included, a bug occurs where the last playing
+player will be swapped from round to round with the excluded player when they
+have the same number of wins (probably 0 wins apiece). Again, no effort was made
+to correct this, but it wouldn't be difficult to address if there is a need for
+this.
 
 # Personal notes
 
