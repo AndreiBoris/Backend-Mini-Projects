@@ -1,7 +1,6 @@
 #
 # Tournament - A simplistic swiss pairing tournament that doesn't perform well
-#               with non-power-of-two numbers of players or with more than 8
-#               players. Powered by a SQL database.
+#              with more than 8 players.
 #
 
 # Interface with SQL database
@@ -272,7 +271,19 @@ def determineRoundsNeeded(pairs):
 
 ## Get tournament winner
 def getWinner():
-    return tournament.playerStandings()[0][1]
+    '''Return a bool signifying whether a winner could be determined, and, if
+    True, the string of the winner's name'''
+    standings = tournament.playerStandings()
+    length = len(standings)
+    topScore = standings[0][2]
+    if standings[1][2] == topScore:
+        return False, ''
+    else:
+        return True, standings[0][1]
+
+goAgain = False
+
+import pdb
 
 ## View the tournament mode
 def SwissPairings(env, resp):
@@ -283,6 +294,7 @@ def SwissPairings(env, resp):
     cleanUp() # Remove matches if not stored in python (due to unsubmitted tournament)
     matchList = ''
     formattedList = ''
+    global goAgain
     global matchesToPlay, currentMatches, previousRounds, roundsLeft
     global tournamentBegan, tournamentOver, lastTournamentResult
     if not tournamentBegan:
@@ -293,6 +305,9 @@ def SwissPairings(env, resp):
         if roundsLeft and matchesToPlay == 0: # new round
             if currentMatches: # We already have a round saved
                 prepareForNextRound() # Clear matches and insert into database
+                roundsLeft -= 1
+            if goAgain:
+                goAgain = False
                 roundsLeft -= 1
             i = 0 # index for the matches for the current round
             pairings = tournament.swissPairings()
@@ -311,21 +326,33 @@ def SwissPairings(env, resp):
                 else:
                     matchList = addPendingMatch(matchList, match)
         else:
-            tournamentOver = True
             prepareForNextRound()
-            lastTournamentResult = loadPreviousRounds('')
-            del previousRounds[:]
-            winner = getWinner()
-            lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
+            winnerExists, winner = getWinner()
+            if winnerExists:
+                tournamentOver = True
+                lastTournamentResult = loadPreviousRounds('')
+                del previousRounds[:]
+                lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
+            else:
+                formattedList = loadPreviousRounds(formattedList)
+                roundsLeft += 1
+                goAgain = True
 
     formattedList += templates.TOURNAMENTROUND % matchList
 
     if tournamentOver:
         formattedList = lastTournamentResult
 
-    headers = [('Content-type', 'text/html')]
-    resp('200 OK', headers)
-    return templates.HTML_WRAP % formattedList
+    if goAgain:
+        # 302 redirect back to the player standings
+        headers = [('Location', '/SwissPairings'),
+                   ('Content-type', 'text/plain')]
+        resp('302 REDIRECT', headers)
+        return ['Redirecting']
+    else:
+        headers = [('Content-type', 'text/html')]
+        resp('200 OK', headers)
+        return templates.HTML_WRAP % formattedList
 
 ## Report a winner and loser and store it in the global currentMatches
 def ReportMatch(env, resp):
