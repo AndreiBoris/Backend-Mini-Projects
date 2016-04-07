@@ -1,5 +1,90 @@
-rdb-fullstack
-=============
+# Mini Tournament
+
+This is a mini swiss pairings tournament powered by a python backend and SQL
+database. Go to [vagrant/tournament](https://github.com/AndreiCommunication/fullstack-nanodegree-vm/tree/master/vagrant/tournament) directory to look at the relevant files.
+
+* `tournament.py` is the python interface interacting with the SQL database
+* `tournament.sql` creates the empty SQL tables if they don't already exist
+* `tournament_test.py` can be run using `python tournament_test.py` to ensure
+that `tournament.py` is functioning correctly
+* `server.py` is the python server for the HTML content
+* `templates.py` includes the HTML templates used by `server.py`
+
+## View
+
+If you want to view the project and interact with it
+
+* Clone this repository:
+
+```
+git clone https://github.com/AndreiCommunication/fullstack-nanodegree-vm.git thisvm
+cd thisvm
+```
+
+* Enter the `vagrant` directory and boot the virtual machine. Note that for this
+step to work you need
+[vagrant](https://www.vagrantup.com/) and
+[VirtualBox](https://www.virtualbox.org/)
+to be correctly installed.
+
+```
+cd vagrant
+vagrant up
+```
+
+The `vagrant up` step will take up to about a minute to run as the virtual
+machine boots up.
+
+* Enter the virtual machine:
+
+```
+vagrant ssh
+```
+
+* Enter the tournament directory:
+
+```
+cd /vagrant/tournament
+```
+
+* Host the website on local host, port 8000
+
+```
+python server.py
+```
+
+* Open the url `http://localhost:8000/` in your browser to view.
+
+## Interact
+
+After hosting onto local host (see [View](#view) for instructions), interact
+with the website in the following way:
+
+Click on the **Show Players** tab to display currently registered player. To
+delete a player click the 'X' at the end of the respective row.  To Add players,
+click on **Add Player** and enter a non-empty string that has at most 9
+characters.
+
+Click on **Swiss Pairing** to go to the tournament view. Click on the player
+that won the match to settle the match. Once all matches in a round are settled,
+a new round will start IF a winner has not already been decided. A winner is
+decided according to Swiss Tournament fashion and is the player with the most
+wins after the correct number of rounds have been played:
+
+Number of Rounds | Number of Players
+      1                   2
+      2                   3,4
+      3                   5,6,7,8
+      4                   9-16
+
+And so on.
+
+**Note**: see issues in this repository for problems with this.
+
+# Personal notes
+
+You can ignore everything from here down as this is just for personal
+documentation about this project in a logical place.
 
 [More info here](https://docs.google.com/document/d/16IgOm4XprTaKxAa8w02y028oBECOoB1EI1ReddADEeY/pub?embedded=true)
 
