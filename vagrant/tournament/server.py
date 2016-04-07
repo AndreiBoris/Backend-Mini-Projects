@@ -476,16 +476,20 @@ def ReportMatch(env, resp):
     '''
     Report a match and store it in the global currentMatches
     '''
+    global currentMatches, matchesToPlay
     # Get fields from the submitted form
     fields = getFields(env)
-    global currentMatches, matchesToPlay
-
+    # A reported match means one less match to play before submitting the whole
+    # round of matches and moving onto the next one
     matchesToPlay -= 1
-
+    # the sql player id of the winner
     winnerid = int(fields['winnerid'][0])
+    # the index attribute of the match inside currentMatches taken from the form
     index = int(fields['matchindex'][0])
-
+    # Access match at index and set the winner of the match to be the chosen
+    # winner from the form submission
     currentMatches[index]['winner'] = winnerid
+    # Match is played, so display it differently from pending matches.
     currentMatches[index]['alreadyPlayed'] = True
 
     # 302 redirect back to the swiss pairings
@@ -499,18 +503,22 @@ def ReportTournament(env, resp):
     '''
     Report a tournament and clear matches for a next tournament.
     '''
+    global tournamentBegan, tournamentOver, lastTournamentResult
     # Get fields from the submitted form
     fields = getFields(env)
+    # The choice is either to store or discard a tournament
     choice = fields['storeTournament'][0]
-
-    global tournamentBegan, tournamentOver, lastTournamentResult
-    tournamentOver = False
-    tournamentBegan = False
-    lastTournamentResult = ''
 
     # if the user chose to store the tournament we report it
     if choice == 'store':
         tournament.reportTournament()
+    else: # if the use choice is to discard a tournament, do nothing
+        pass
+
+    # Reset values to make way for a new tournament
+    tournamentOver = False
+    tournamentBegan = False
+    lastTournamentResult = ''
 
     # 302 redirect back to the swiss pairings
     headers = [('Location', '/ShowPlayers'),
