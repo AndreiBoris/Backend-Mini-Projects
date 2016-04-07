@@ -1,6 +1,8 @@
 #
 # Tournament - A simplistic swiss pairing tournament that doesn't perform well
-#              with more than 8 players.
+#              with more than 8 players. Tournament acts badly when there is not
+#               an even number of players (players will be pushed in and out at
+#               the bottom)
 #
 
 # Interface with SQL database
@@ -192,7 +194,7 @@ def DeleteOnePlayer(env, resp):
     return ['Redirecting']
 
 ## Append all previous tournament rounds to a formatted HTML list
-def loadPreviousRounds(roundList):
+def loadPreviousRounds(roundList=''):
     '''Return roundList except with all previousRounds appended to it'''
     global previousRounds # rounds already played in this tournament
     for round in previousRounds: # each round is a list containing objects
@@ -386,6 +388,25 @@ def handleOtherRounds():
             matchList = addPendingMatch(matchList, match)
     return matchList
 
+def handleEndOfTourny(needTieBreakerRound):
+    ''''''
+    global tournamentOver, lastTournamentResult, roundsLeft
+    prepareForNextRound() # submit currently pending match
+    winnerExists, winner = getWinner()
+    if winnerExists: # We can end the tournament
+        tournamentOver = True
+        # Load all already-played rounds to be displayed
+        lastTournamentResult = loadPreviousRounds()
+        # Clear previous rounds for the next tournament
+        del previousRounds[:]
+        # Add the tournament winner and user buttons to be displayed with rounds
+        lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
+    else: # We need to play another round
+        roundsLeft += 1
+        needTieBreakerRound = True
+    # Allow caller to determine correct action
+    return needTieBreakerRound
+
 ## View the tournament mode
 def SwissPairings(env, resp):
     '''
@@ -420,16 +441,7 @@ def SwissPairings(env, resp):
         elif matchesToPlay > 0: # not a new round
             matchList = handleOtherRounds()
         else: # no rounds or matches left to play
-            prepareForNextRound() # submit currently pending match
-            winnerExists, winner = getWinner()
-            if winnerExists:
-                tournamentOver = True
-                lastTournamentResult = loadPreviousRounds(roundList)
-                del previousRounds[:]
-                lastTournamentResult += templates.TOURNAMENTCONCLUSION % (winner)
-            else:
-                roundsLeft += 1
-                needTieBreakerRound = True
+            needTieBreakerRound = handleEndOfTourny(needTieBreakerRound)
 
     roundList = loadPreviousRounds(roundList)
     roundList += templates.TOURNAMENTROUND % matchList
