@@ -18,11 +18,27 @@ class webserverHandler(BaseHTTPRequestHandler):
 
 
                 output = ''
-                output += '<html><body>Hello!</body></html>'
+                output += '<html><body>Hello! <a href="/hola">Over to Hola</a></body></html>'
                 # Send a message back to the client
                 self.wfile.write(output)
                 print output
                 return
+            elif self.path.endswith('/hola'):
+                # Indicate successful GET request
+                self.send_response(200)
+                # Indicate that the reply is in the form of HTML to the client
+                self.send_header('Content-type', 'text/html')
+                # We are done sending headers
+                self.end_headers()
+
+
+                output = ''
+                output += '<html><body>&#161Hola! <a href="/hello">Back to Hello</a></body></html>'
+                # Send a message back to the client
+                self.wfile.write(output)
+                print output
+                return
+
         except IOError:
             # If path points to something we can't find, we talk about it.
             self.send_error(404, 'File Not Found %s', self.path)
