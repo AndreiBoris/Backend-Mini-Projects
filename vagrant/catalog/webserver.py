@@ -33,7 +33,15 @@ template_RESTAURANT_OPEN = '<div>'
 
 template_LINE_BREAK = '<br />'
 
-template_RESTAURANT = '<div>%s</div>'
+template_RESTAURANT = '''\
+<div>
+    %(name)s
+    <br />
+    <a href="#">Edit</a>
+    <br />
+    <a href="#">Delete</a>
+</div>
+'''
 
 template_RESTAURANT_CLOSE = '</div>'
 
@@ -50,7 +58,8 @@ def ListAllRestaurants(env):
     output += template_HTML_OPEN
 
     for restaurant in restaurantList:
-        output += template_RESTAURANT % restaurant.name
+        output += template_RESTAURANT % {
+                                        'name': restaurant.name}
         output += template_LINE_BREAK
 
     output += template_FORM
