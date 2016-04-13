@@ -205,6 +205,10 @@ class webserverHandler(BaseHTTPRequestHandler):
             elif self.path.endswith('/edit'):
                 matchObj = re.match( r'\D*(\d*)\D*', self.path)
                 number = int(matchObj.group(1))
+                # Could have also used self.path.split('/')[2]
+                # Should probably test to see that the id works by doing a query
+                # otherwise perhaps its better to not render anything and go
+                # back to restaurantlist?
                 EditRestaurant(self, number)
 
         except IOError:
