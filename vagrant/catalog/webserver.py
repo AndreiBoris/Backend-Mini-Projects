@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
@@ -37,7 +39,7 @@ template_RESTAURANT = '''\
 <div>
     %(name)s
     <br />
-    <a href="#">Edit</a>
+    <a href="/restaurants/%(id)s/edit">Edit</a>
     <br />
     <a href="#">Delete</a>
 </div>
@@ -57,6 +59,19 @@ template_RESTAURANT_CLOSE = '</div>'
 
 template_LIST_RESTAURANTS_LINK = '<a href="/restaurants">Back to Restaurants</a>'
 
+template_RESTAURANT_TITLE = '''\
+<h2>%(name)s</h2>
+'''
+
+template_RESTAURANT_EDIT = '''\
+<form method="POST" enctype="multipart/form-data" action="/restaurants/%(id)s/edit">
+
+    <input name="new-name"  type="text" placeholder="Type new name here">
+    <br />
+    <button type="submit">Edit Restaurant</button>
+</form>
+'''
+
 def ListAllRestaurants(env):
     # Indicate successful GET request
     env.send_response(200)
@@ -74,7 +89,8 @@ def ListAllRestaurants(env):
 
     for restaurant in restaurantList:
         output += template_RESTAURANT % {
-                                        'name': restaurant.name}
+                                        'name': restaurant.name,
+                                        'id': restaurant.id}
         output += template_LINE_BREAK
 
     output += template_FORM
@@ -125,6 +141,32 @@ def InsertRestaurant(env):
     else:
         print 'ctype was not \'multipart/form-data\''
 
+def EditRestaurant(env, number):
+    # Indicate successful GET request
+    env.send_response(200)
+    # Indicate that the reply is in the form of HTML to the client
+    env.send_header('Content-type', 'text/html')
+    # We are done sending headers
+    env.end_headers()
+
+    selectedRestaurant = session.query(Restaurant).filter_by(id = number).one()
+    print selectedRestaurant.name
+    print selectedRestaurant.id
+    output = ''
+    output += template_HTML_OPEN
+    output += template_LIST_RESTAURANTS_LINK
+    output += template_LINE_BREAK
+    output += template_RESTAURANT_TITLE % {'name': selectedRestaurant.name }
+    output += template_LINE_BREAK
+    output += template_RESTAURANT_EDIT % {'id': selectedRestaurant.id }
+    output += template_LINE_BREAK
+    output += template_HTML_CLOSE
+    # Send a message back to the client
+    env.wfile.write(output)
+    # print output
+    print output
+    return
+
 # Handler
 class webserverHandler(BaseHTTPRequestHandler):
     # Handle all GET requests that our server receives
@@ -138,6 +180,13 @@ class webserverHandler(BaseHTTPRequestHandler):
 
             elif self.path.endswith('/restaurants/new'):
                 CreateNewRestaurant(self)
+
+            elif self.path.endswith('/edit'):
+                matchObj = re.match( r'\D*(\d*)\D*', self.path)
+                number = int(matchObj.group(1))
+                EditRestaurant(self, number)
+
+
 
             elif self.path.endswith('/hola'):
                 # Indicate successful GET request
