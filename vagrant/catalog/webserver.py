@@ -46,7 +46,7 @@ template_RESTAURANT = '''\
 template_NEW_RESTAURANT_LINK = '<a href="/restaurants/new">Add Restaurant</a>'
 
 template_NEW_RESTAURANT_FORM = '''\
-<form method="POST" enctype="multipart/form-data" action="/restaurants/adding">
+<form method="POST" enctype="multipart/form-data" action="/restaurants/new">
     <input name="new-restaurant"  type="text">
     <br />
     <button type="submit">Add Restaurant</button>
@@ -163,12 +163,13 @@ class webserverHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            if self.path.endswith('/restaurants/adding'):
+            if self.path.endswith('/restaurants/new'):
+                InsertRestaurant(self)
                 # redirect to the restaurant list
                 self.send_response(301)
+                self.send_header('Content-type', 'text/html')
                 self.send_header('Location', '/restaurants')
                 self.end_headers()
-                InsertRestaurant(self)
 
             else:
                 # incicate successful POST
