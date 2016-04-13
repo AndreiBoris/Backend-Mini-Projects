@@ -59,14 +59,12 @@ template_RESTAURANT_CLOSE = '</div>'
 
 template_LIST_RESTAURANTS_LINK = '<a href="/restaurants">Back to Restaurants</a>'
 
-template_RESTAURANT_TITLE = '''\
-<h2>%(name)s</h2>
-'''
-
 template_RESTAURANT_EDIT = '''\
+<h2>%(name)s</h2><br />
 <form method="POST" enctype="multipart/form-data" action="/restaurants/%(id)s/edit">
 
-    <input name="new-name"  type="text" placeholder="Type new name here">
+    <input name="new-name"  type="text" value="%(name)s">
+    <input name="restaurant-id" type="hidden" value="%(id)s">
     <br />
     <button type="submit">Edit Restaurant</button>
 </form>
@@ -156,9 +154,9 @@ def EditRestaurant(env, number):
     output += template_HTML_OPEN
     output += template_LIST_RESTAURANTS_LINK
     output += template_LINE_BREAK
-    output += template_RESTAURANT_TITLE % {'name': selectedRestaurant.name }
     output += template_LINE_BREAK
-    output += template_RESTAURANT_EDIT % {'id': selectedRestaurant.id }
+    output += template_RESTAURANT_EDIT % {  'name': selectedRestaurant.name,
+                                            'id': selectedRestaurant.id }
     output += template_LINE_BREAK
     output += template_HTML_CLOSE
     # Send a message back to the client
@@ -166,6 +164,29 @@ def EditRestaurant(env, number):
     # print output
     print output
     return
+
+def UpdateRestaurant(env):
+    # cgi.parse_header parses an HTML header such as 'content-type' into
+    # a main value, and a dictionary of parameters
+    ctype, pdict = cgi.parse_header(env.headers.getheader('content-type'))
+    # Is this form data being received?
+    if ctype == 'multipart/form-data':
+        # cgi.parse_multipart collects all the fields in a form
+        fields = cgi.parse_multipart(env.rfile, pdict)
+        # Get the value from the specific field called 'new-restaurant'
+        restaurantId = fields.get('restaurant-id')[0]
+        restaurantName = fields.get('new-name')[0]
+        if restaurantName: # if a restaurant name was entered
+            print restaurantName
+            print restaurantId
+            chosenRestaurant = session.query(Restaurant).filter_by(id = restaurantId).one()
+            chosenRestaurant.name = restaurantName
+            session.add(chosenRestaurant)
+            session.commit()
+        else:
+            print 'No restaurant name was entered.'
+    else:
+        print 'ctype was not \'multipart/form-data\''
 
 # Handler
 class webserverHandler(BaseHTTPRequestHandler):
@@ -186,26 +207,6 @@ class webserverHandler(BaseHTTPRequestHandler):
                 number = int(matchObj.group(1))
                 EditRestaurant(self, number)
 
-
-
-            elif self.path.endswith('/hola'):
-                # Indicate successful GET request
-                self.send_response(200)
-                # Indicate that the reply is in the form of HTML to the client
-                self.send_header('Content-type', 'text/html')
-                # We are done sending headers
-                self.end_headers()
-
-
-                output = ''
-                output += template_HTML_OPEN
-                output += '&#161Hola! <a href="/hello">Back to Hello</a>'
-                output += template_FORM
-                output += template_HTML_CLOSE
-                # Send a message back to the client
-                self.wfile.write(output)
-                print output
-                return
         except IOError:
             # If path points to something we can't find, we talk about it.
             self.send_error(404, 'File Not Found %s', self.path)
@@ -215,6 +216,13 @@ class webserverHandler(BaseHTTPRequestHandler):
             if self.path.endswith('/restaurants/new'):
                 InsertRestaurant(self)
                 # redirect to the restaurant list
+                self.send_response(301)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Location', '/restaurants')
+                self.end_headers()
+
+            elif self.path.endswith('/edit'):
+                UpdateRestaurant(self)
                 self.send_response(301)
                 self.send_header('Content-type', 'text/html')
                 self.send_header('Location', '/restaurants')
