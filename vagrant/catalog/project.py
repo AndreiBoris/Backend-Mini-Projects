@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request, redirect
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -40,10 +40,18 @@ def restaurantMenu(restaurant_id):
     return render_template('menu.html', restaurant=restaurant, items = items)
 
 # Task 1: Create route for newMenuItem function here
-@app.route('/restaurants/<int:restaurant_id>/new')
+@app.route('/restaurants/<int:restaurant_id>/new', methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
-
-    return "page to create a new menu item. Task 1 complete!"
+    if request.method == 'POST':
+        newItem = MenuItem(name = request.form['name'],
+                            restaurant_id = restaurant_id,
+                            description = request.form['description'],
+                            price = request.form['price'])
+        session.add(newItem)
+        session.commit()
+        return redirect(url_for('restaurantMenu', restaurant_id = restaurant_id))
+    else: # got a GET request
+        return render_template('newmenuitem.html', restaurant_id = restaurant_id)
 
 # Task 2: Create route for editMenuItem function here
 
