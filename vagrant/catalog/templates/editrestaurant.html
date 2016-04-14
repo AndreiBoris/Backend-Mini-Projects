@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <h1>Add New Restaurant</h1>
+    <form action="{{ url_for('editRestaurant', restaurant_id = r.id )}}" method="post">
+        <label for="name">Name</label>
+    </br>
+        <input type="text" maxlength="150" size="30" name="name" value="{{ r.name }}">
+    </br>
+        <button type="submit">Edit</button>
+        <a href="{{ url_for('showRestaurants' )}}">Cancel</a>
+    </form>
+</body>
+</html>
