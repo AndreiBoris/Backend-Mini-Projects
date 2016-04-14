@@ -1,6 +1,12 @@
+<!DOCTYPE html>
 <html>
 
-<body>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
+</head>
+
+<body class="container">
     <h1>Edit Menu Item</h1>
 
     <form action="{{ url_for('editMenuItem', restaurant_id = restaurant_id, menu_id = menu_id )}}" method="post" <label for="name">Name</label>

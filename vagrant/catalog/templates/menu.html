@@ -1,6 +1,12 @@
+<!DOCTYPE html>
 <html>
 
-<body>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
+</head>
+
+<body class="container">
     <h1>{{ restaurant.name }}</h1> {% with messages = get_flashed_messages() %} {% if messages %}
 
     <ul>
@@ -10,7 +16,9 @@
     </ul>
     {% endif %} {% endwith %}
 
+    <ul class="menu">
     {% for i in items %}
+    <li class="menu__item">
     {{i.name}}
     </br>
     {{i.description}}
@@ -26,7 +34,9 @@
                         menu_id=i.id) }}">Delete</a>
     </br>
     </br>
+    </li>
     {% endfor %}
+    </ul>
     <a href="{{ url_for('newMenuItem',
                             restaurant_id = restaurant.id) }}">Add item</a>
 </body>

@@ -1,0 +1,19 @@
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 0 1em;
+    border-left: 1px solid #999;
+    border-right: 1px solid #999;
+}
+
+.menu {
+    list-style: none;
+}
+
+.menu__item {
+    padding-top: 0.5em;
+}
+
+.menu__item + .menu__item {
+    border-top: 1px solid #666;
+}

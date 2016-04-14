@@ -1,6 +1,10 @@
+<!DOCTYPE html>
 <html>
-
-<body>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
+</head>
+<body class="container">
     <h1>Are you sure you want to delete {{ i.name }}?</h1>
 
     <form action="{{ url_for('deleteMenuItem',
