@@ -41,7 +41,7 @@ template_RESTAURANT = '''\
     <br />
     <a href="/restaurants/%(id)s/edit">Edit</a>
     <br />
-    <a href="#">Delete</a>
+    <a href="/restaurants/%(id)s/delete">Delete</a>
 </div>
 '''
 
@@ -67,6 +67,15 @@ template_RESTAURANT_EDIT = '''\
     <input name="restaurant-id" type="hidden" value="%(id)s">
     <br />
     <button type="submit">Edit Restaurant</button>
+</form>
+'''
+
+template_RESTAURANT_CONFIRM_DELETE = '''\
+<h2>Are you sure you want to delete %(name)s?</h2><br />
+<form method="POST" enctype="multipart/form-data" action="/restaurants/%(id)s/delete">
+    <input name="restaurant-id" type="hidden" value="%(id)s">
+    <br />
+    <button type="submit">Confirm Delete</button>
 </form>
 '''
 
@@ -188,6 +197,53 @@ def UpdateRestaurant(env):
     else:
         print 'ctype was not \'multipart/form-data\''
 
+def ConfirmDeleteRestaurant(env, number):
+    # Indicate successful GET request
+    env.send_response(200)
+    # Indicate that the reply is in the form of HTML to the client
+    env.send_header('Content-type', 'text/html')
+    # We are done sending headers
+    env.end_headers()
+
+    selectedRestaurant = session.query(Restaurant).filter_by(id = number).one()
+
+    print selectedRestaurant.name
+    print selectedRestaurant.id
+    output = ''
+    output += template_HTML_OPEN
+    output += template_LIST_RESTAURANTS_LINK
+    output += template_LINE_BREAK
+    output += template_LINE_BREAK
+    output += template_RESTAURANT_CONFIRM_DELETE % {  'name': selectedRestaurant.name,
+                                            'id': selectedRestaurant.id }
+    output += template_LINE_BREAK
+    output += template_HTML_CLOSE
+    # Send a message back to the client
+    env.wfile.write(output)
+    # print output
+    print output
+    return
+
+def DeleteRestaurant(env):
+    # cgi.parse_header parses an HTML header such as 'content-type' into
+    # a main value, and a dictionary of parameters
+    ctype, pdict = cgi.parse_header(env.headers.getheader('content-type'))
+    # Is this form data being received?
+    if ctype == 'multipart/form-data':
+        # cgi.parse_multipart collects all the fields in a form
+        fields = cgi.parse_multipart(env.rfile, pdict)
+        # Get the value from the specific field called 'new-restaurant'
+        restaurantId = fields.get('restaurant-id')[0]
+        if restaurantId: # if a restaurant id is found
+            print restaurantId
+            chosenRestaurant = session.query(Restaurant).filter_by(id = restaurantId).one()
+            session.delete(chosenRestaurant)
+            session.commit()
+        else:
+            print 'No restaurant id was found.'
+    else:
+        print 'ctype was not \'multipart/form-data\''
+
 # Handler
 class webserverHandler(BaseHTTPRequestHandler):
     # Handle all GET requests that our server receives
@@ -211,6 +267,10 @@ class webserverHandler(BaseHTTPRequestHandler):
                 # back to restaurantlist?
                 EditRestaurant(self, number)
 
+            elif self.path.endswith('/delete'):
+                number = self.path.split('/')[2]
+                ConfirmDeleteRestaurant(self, number)
+
         except IOError:
             # If path points to something we can't find, we talk about it.
             self.send_error(404, 'File Not Found %s', self.path)
@@ -227,6 +287,13 @@ class webserverHandler(BaseHTTPRequestHandler):
 
             elif self.path.endswith('/edit'):
                 UpdateRestaurant(self)
+                self.send_response(301)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Location', '/restaurants')
+                self.end_headers()
+
+            elif self.path.endswith('/delete'):
+                DeleteRestaurant(self)
                 self.send_response(301)
                 self.send_header('Content-type', 'text/html')
                 self.send_header('Location', '/restaurants')
