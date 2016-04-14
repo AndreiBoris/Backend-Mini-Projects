@@ -31,12 +31,12 @@ session = DBSession()
 # function that follows it whenever the server gets a URL request that matches
 # its argument.
 @app.route('/')
-@app.route('/hello')
-def HelloWorld():
+@app.route('/restaurants/<int:restaurant_id>')
+def restaurantMenu(restaurant_id):
     # Get first restaurant in the database
-    restaurant = session.query(Restaurant).first()
+    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     # Get all the menu items that are in that first restaurant
-    items = session.query(MenuItem).filter_by(restaurant_id = restaurant.id)
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id)
     output = ''
     for i in items:
         output += i.name
