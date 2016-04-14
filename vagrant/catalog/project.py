@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask, render_template, url_for, request, redirect, flash
+from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -73,6 +73,17 @@ def editMenuItem(restaurant_id, menu_id):
                                 restaurant_id = restaurant_id,
                                 menu_id = menu_id,
                                 i = editedItem)
+
+@app.route('/restaurants/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/JSON')
+def restaurantMenuItemJSON(restaurant_id, menu_id):
+    item = session.query(MenuItem).filter_by(id = menu_id).one()
+    return jsonify(RequestedItem=item.serialize)
 
 # Task 3: Create a route for deleteMenuItem function here
 
