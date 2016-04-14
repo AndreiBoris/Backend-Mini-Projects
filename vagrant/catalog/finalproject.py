@@ -1,14 +1,25 @@
 # Flask web framework
-from flask import Flask
+from flask import Flask, url_for, render_template
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
+
+#Fake Restaurants
+restaurant = {'name': 'The CRUDdy Crab', 'id': '1'}
+
+restaurants = [{'name': 'The CRUDdy Crab', 'id': '1'}, {'name':'Blue Burgers', 'id':'2'},{'name':'Taco Hut', 'id':'3'}]
+
+#Fake Menu Items
+items = [ {'name':'Cheese Pizza', 'description':'made with fresh cheese', 'price':'$5.99','course' :'Entree', 'id':'1'}, {'name':'Chocolate Cake','description':'made with Dutch Chocolate', 'price':'$3.99', 'course':'Dessert','id':'2'},{'name':'Caesar Salad', 'description':'with fresh organic vegetables','price':'$5.99', 'course':'Entree','id':'3'},{'name':'Iced Tea', 'description':'with lemon','price':'$.99', 'course':'Beverage','id':'4'},{'name':'Spinach Dip', 'description':'creamy dip with fresh spinach','price':'$1.99', 'course':'Appetizer','id':'5'} ]
+item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree'}
+
+
 
 # List all the restaurants
 @app.route('/')
 @app.route('/restaurants')
 def showRestaurants():
-    return 'Here is a list of all of our restaurants.'
+    return render_template('restaurants.html', restaurants=restaurants )
 
 # Add a new restaurant
 @app.route('/restaurant/new')
@@ -45,7 +56,6 @@ def editMenuItem(restaurant_id, item_id):
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete')
 def deleteMenuItem(restaurant_id, item_id):
     return 'Are you sure you want to delete item %d in restaurant %d' % (item_id, restaurant_id)
-
 
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
