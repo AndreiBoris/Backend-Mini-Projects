@@ -5,15 +5,15 @@
 
     <form action="{{ url_for('editMenuItem', restaurant_id = restaurant_id, menu_id = menu_id )}}" method="post" <label for="name">Name</label>
         </br>
-        <input type="text" size="30" name="name" value="{{selectedItem.name}}">
+        <input type="text" size="30" name="name" value="{{i.name}}">
         </br>
         <label for="description">description</label>
         </br>
-        <input type="text" size="30" name="description" value="{{selectedItem.description}}">
+        <input type="text" size="30" name="description" value="{{i.description}}">
         </br>
         <label for="price">price</label>
         </br>
-        <input type="text" size="30" name="price" value="{{selectedItem.price}}">
+        <input type="text" size="30" name="price" value="{{i.price}}">
         </br>
         <input type="submit" value="Edit">
         <a style="text-decoration: none" href="{{ url_for('restaurantMenu', restaurant_id = restaurant_id )}}">
