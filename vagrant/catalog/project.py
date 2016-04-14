@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask
+from flask import Flask, render_template
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -37,16 +37,7 @@ def restaurantMenu(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     # Get all the menu items that are in that first restaurant
     items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id)
-    output = ''
-    for i in items:
-        output += i.name
-        output += '<br />'
-        output += i.price
-        output += '<br />'
-        output += i.description
-        output += '<br />'
-        output += '<br />'
-    return output
+    return render_template('menu.html', restaurant=restaurant, items = items)
 
 # Task 1: Create route for newMenuItem function here
 @app.route('/restaurants/<int:restaurant_id>/new')
