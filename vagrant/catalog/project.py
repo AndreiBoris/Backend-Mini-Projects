@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, flash
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -49,6 +49,7 @@ def newMenuItem(restaurant_id):
                             price = request.form['price'])
         session.add(newItem)
         session.commit()
+        flash("New menu item created!")
         return redirect(url_for('restaurantMenu', restaurant_id = restaurant_id))
     else: # got a GET request
         return render_template('newmenuitem.html', restaurant_id = restaurant_id)
@@ -65,6 +66,7 @@ def editMenuItem(restaurant_id, menu_id):
         editedItem.price = request.form['price']
         session.add(editedItem)
         session.commit()
+        flash("Item edited!")
         return redirect(url_for('restaurantMenu', restaurant_id = restaurant_id))
     else: # got a GET request
         return render_template('editmenuitem.html',
@@ -81,6 +83,7 @@ def deleteMenuItem(restaurant_id, menu_id):
     if request.method == 'POST':
         session.delete(deleteTargetItem)
         session.commit()
+        flash("Item deleted!")
         return redirect(url_for('restaurantMenu', restaurant_id = restaurant_id))
     else: # got a GET request
         return render_template('deletemenuitem.html',
@@ -89,6 +92,9 @@ def deleteMenuItem(restaurant_id, menu_id):
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
 if __name__ == '__main__':
+    # Flask will use this to create sessions for our users. Make sure it is
+    # secure in a production environment
+    app.secret_key = 'super_secret_key'
     # Reload server each time there is a code change
     app.debug = True
     # By default the server is only accessible from the host machine and not
