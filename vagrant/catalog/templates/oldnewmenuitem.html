@@ -9,7 +9,8 @@
 <body class="container">
     <h1>New Menu Item</h1>
 
-    <form action="{{ url_for('newMenuItem', restaurant_id=restaurant_id )}}" method="post" <label for="name">Name</label>
+    <form action="{{ url_for('newMenuItem', restaurant_id=restaurant_id )}}" method="post">
+        <label for="name">Name</label>
         </br>
         <input type="text" size="30" name="name">
         </br>
