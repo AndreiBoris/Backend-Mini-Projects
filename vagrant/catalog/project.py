@@ -84,8 +84,6 @@ def deleteMenuItem(restaurant_id, menu_id):
         return redirect(url_for('restaurantMenu', restaurant_id = restaurant_id))
     else: # got a GET request
         return render_template('deletemenuitem.html',
-                                restaurant_id = restaurant_id,
-                                menu_id = menu_id,
                                 i = deleteTargetItem)
 
 # The application run by the Python interpretor gets the name __main__
