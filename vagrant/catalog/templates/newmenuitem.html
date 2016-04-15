@@ -20,8 +20,10 @@
         </br>
         <input type="text" maxlength="250" size="50" name="description">
         </br>
-        <button type="submit">Add</button>
-        <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">Cancel</a>
+        <button class="button--big" type="submit">Add</button>
+        <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">
+            <button type="button" class="button--big button--cancel">Cancel</button>
+        </a>
     </form>
 </div>
 </body>
