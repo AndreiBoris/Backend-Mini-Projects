@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <h1>Add New Menu Item For {{ r.name }}</h1>
+    <form action="{{ url_for('newMenuItem', restaurant_id = r.id )}}" method="post">
+        <label for="name">Name</label>
+        </br>
+        <input type="text" maxlength="50" size="20" name="name">
+        </br>
+        <label for="price">Price</label>
+        </br>
+        <input type="text" maxlength="16" size="10" name="price">
+        </br>
+        <label for="description">Description</label>
+        </br>
+        <input type="text" maxlength="250" size="50" name="description">
+        <button type="submit">Add</button>
+        <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">Cancel</a>
+    </form>
+</body>
+</html>

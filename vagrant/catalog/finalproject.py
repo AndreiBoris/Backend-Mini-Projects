@@ -49,16 +49,19 @@ def showMenu(restaurant_id):
 # Add a new menu item for a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/new')
 def newMenuItem(restaurant_id):
-    return 'Here we can add a new item to restaurant %d' % restaurant_id
+    # TODO: Replace placeholder
+    return render_template('newmenuitem.html', r=restaurant)
 
 # Edit existing menu item in a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/edit')
 def editMenuItem(restaurant_id, item_id):
+    # TODO: Replace placeholders
     return 'Here we can edit item %d in restaurant %d' % (item_id, restaurant_id)
 
 # Delete existing menu item in a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete')
 def deleteMenuItem(restaurant_id, item_id):
+    # TODO: Replace placeholders
     return 'Are you sure you want to delete item %d in restaurant %d' % (item_id, restaurant_id)
 
 # The application run by the Python interpretor gets the name __main__
