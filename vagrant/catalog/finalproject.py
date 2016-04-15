@@ -87,10 +87,19 @@ def showMenu(restaurant_id):
     return render_template('menu.html', r=selectedRestaurant, items=items)
 
 # Add a new menu item for a restaurant
-@app.route('/restaurant/<int:restaurant_id>/menu/new')
+@app.route('/restaurant/<int:restaurant_id>/menu/new', methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
-    # TODO: Replace placeholder
-    return render_template('newmenuitem.html', r=restaurant)
+    selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    if request.method == 'POST':
+        newMenuItem = MenuItem(name = request.form['name'],
+                               price = request.form['price'],
+                               description = request.form['description'],
+                               restaurant_id = restaurant_id)
+        session.add(newMenuItem);
+        session.commit()
+        return redirect(url_for('showMenu', restaurant_id = restaurant_id))
+    else: # GET
+        return render_template('newmenuitem.html', r=selectedRestaurant)
 
 # Edit existing menu item in a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/edit')
