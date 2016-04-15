@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask, url_for, render_template, redirect, request, jsonify
+from flask import Flask, url_for, render_template, redirect, request, jsonify, flash
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -47,9 +47,12 @@ def newRestaurant():
 def editRestaurant(restaurant_id):
     selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     if request.method == 'POST':
-        selectedRestaurant.name = request.form['name']
+        newName = request.form['name']
+        selectedRestaurant.name = newName
         session.add(selectedRestaurant)
         session.commit()
+        flashMessage = 'Restaurant name changed to %s!' % newName
+        flash(flashMessage)
         return redirect(url_for('showRestaurants'))
     else: # GET
         return render_template('editrestaurant.html', r=selectedRestaurant)
@@ -60,6 +63,8 @@ def deleteRestaurant(restaurant_id):
     selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     if request.method == 'POST':
         session.delete(selectedRestaurant)
+        flashMessage = 'Deleted restaurant %s' % selectedRestaurant.name
+        flash(flashMessage)
         session.commit()
         return redirect(url_for('showRestaurants'))
     else: # GET

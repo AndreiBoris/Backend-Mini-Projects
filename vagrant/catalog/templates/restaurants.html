@@ -4,6 +4,20 @@
 </head>
 <body>
     <h1>Restaurants</h1>
+
+    {% with messages = get_flashed_messages() %}
+
+    {% if messages %}
+
+    <ul>
+        {% for message in messages %}
+        <li> <strong> {{ message }}</strong></li>
+        {% endfor %}
+    </ul>
+
+    {% endif %}
+    {% endwith %}
+
     <a href="{{ url_for('newRestaurant') }}"><button>Add New Restaurant</button></a>
     <ul>
     {% for r in restaurants %}
