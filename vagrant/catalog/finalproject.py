@@ -68,10 +68,15 @@ def editRestaurant(restaurant_id):
         return render_template('editrestaurant.html', r=selectedRestaurant)
 
 # Delete existing restaurant
-@app.route('/restaurant/<int:restaurant_id>/delete')
+@app.route('/restaurant/<int:restaurant_id>/delete', methods=['GET', 'POST'])
 def deleteRestaurant(restaurant_id):
-    # TODO: Get the restaurant that is actually being asked for, not placeholder
-    return render_template('deleterestaurant.html', r=restaurant)
+    selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    if request.method == 'POST':
+        session.delete(selectedRestaurant)
+        session.commit()
+        return redirect(url_for('showRestaurants'))
+    else: # GET
+        return render_template('deleterestaurant.html', r=selectedRestaurant)
 
 # List all menu items in a particular restaurant
 @app.route('/restaurant/<int:restaurant_id>')
