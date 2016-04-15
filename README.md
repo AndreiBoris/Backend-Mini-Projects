@@ -20,9 +20,12 @@ can find more information in their READMEs:
 
 * Clone this repository:
 
+Note that the `$`s are to indicate prompts in your command line and shouldn't be
+entered.
+
 ```
-git clone https://github.com/AndreiCommunication/Backend-Mini-Projects.git thisvm
-cd thisvm
+$ git clone https://github.com/AndreiCommunication/Backend-Mini-Projects.git thisvm
+$ cd thisvm
 ```
 
 * Enter the `vagrant` directory and boot the virtual machine. Note that for this
@@ -32,8 +35,8 @@ step to work you need
 to be correctly installed.
 
 ```
-cd vagrant
-vagrant up
+$ cd vagrant
+$ vagrant up
 ```
 
 The `vagrant up` step will take up to about a minute to run as the virtual
@@ -42,7 +45,7 @@ machine boots up.
 * Enter the virtual machine:
 
 ```
-vagrant ssh
+$ vagrant ssh
 ```
 
 Now you can follow particular instructions to view either project:

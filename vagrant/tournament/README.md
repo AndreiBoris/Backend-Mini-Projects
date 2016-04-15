@@ -15,19 +15,19 @@ that `tournament.py` is functioning correctly
 First, [log in to the virtual machine](https://github.com/AndreiCommunication/Backend-Mini-Projects#steps-to-follow)
 and then do the following:
 
-* Enter the tournament directory:
+* Enter the `tournament` directory:
 
 ```
-cd /vagrant/tournament
+$ cd /vagrant/tournament
 ```
 
 * Host the website on local host, port 8000
 
 ```
-python server.py
+$ python server.py
 ```
 
-* Open the url `http://localhost:8000/` in your browser to view.
+* Open the url `http://localhost:8000/` in your browser to view. [Or click here.](http://localhost:8000)
 
 ## Interact
 
