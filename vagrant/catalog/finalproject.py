@@ -128,6 +128,13 @@ def restaurantMenuJSON(restaurant_id):
     items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
     return jsonify(MenuItems=[i.serialize for i in items])
 
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/JSON')
+@app.route('/restaurant/<int:restaurant_id>/<int:item_id>/JSON')
+def restaurantMenuItemJSON(restaurant_id, item_id):
+    item = session.query(MenuItem).filter_by(id = item_id).one()
+    return jsonify(MenuItem = item.serialize)
+
+
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
 if __name__ == '__main__':
