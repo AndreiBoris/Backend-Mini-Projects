@@ -52,14 +52,20 @@ def newRestaurant():
         session.add(newRestaurant)
         session.commit()
         return redirect(url_for('showRestaurants'))
-    else:
+    else: # GET
         return render_template('newrestaurant.html')
 
 # Edit existing restaurant
-@app.route('/restaurant/<int:restaurant_id>/edit')
+@app.route('/restaurant/<int:restaurant_id>/edit', methods=['GET', 'POST'])
 def editRestaurant(restaurant_id):
-    # TODO: Get the restaurant that is actually being asked for, not placeholder
-    return render_template('editrestaurant.html', r=restaurant)
+    selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    if request.method == 'POST':
+        selectedRestaurant.name = request.form['name']
+        session.add(selectedRestaurant)
+        session.commit()
+        return redirect(url_for('showRestaurants'))
+    else: # GET
+        return render_template('editrestaurant.html', r=selectedRestaurant)
 
 # Delete existing restaurant
 @app.route('/restaurant/<int:restaurant_id>/delete')
