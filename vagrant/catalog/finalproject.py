@@ -105,11 +105,14 @@ def editMenuItem(restaurant_id, item_id):
     selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     selectedItem = session.query(MenuItem).filter_by(id = item_id).one()
     if request.method == 'POST':
-        selectedItem.name = request.form['name']
+        newName = request.form['name']
+        selectedItem.name = newName
         selectedItem.price = request.form['price']
         selectedItem.description = request.form['description']
         session.add(selectedItem)
         session.commit()
+        flashMessage = 'Changed item %s' % newName
+        flash(flashMessage)
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
     else: # GET
         return render_template('editmenuitem.html', r=selectedRestaurant, i=selectedItem)
@@ -120,8 +123,11 @@ def deleteMenuItem(restaurant_id, item_id):
     selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     selectedItem = session.query(MenuItem).filter_by(id = item_id).one()
     if request.method == 'POST':
+        itemName = selectedItem.name
         session.delete(selectedItem)
         session.commit()
+        flashMessage = 'Deleted item %s' % itemName
+        flash(flashMessage)
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
     else: # GET
         return render_template('deletemenuitem.html', r = selectedRestaurant, i = selectedItem)
