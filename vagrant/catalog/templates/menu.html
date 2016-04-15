@@ -22,11 +22,10 @@
     {% endwith %}
 
     <a href="{{ url_for('showRestaurants' )}}">
-        <button>Back to Restaurant List</button>
+        <button class="button--top">Back to Restaurant List</button>
     </a>
-    </br>
     <a href="{{ url_for('newMenuItem', restaurant_id = r.id) }}">
-        <button>Add New Menu Item</button>
+        <button class="button--top">Add New Menu Item</button>
     </a>
     {% if items|length == 0 %}
     <p>This menu is empty.</p>

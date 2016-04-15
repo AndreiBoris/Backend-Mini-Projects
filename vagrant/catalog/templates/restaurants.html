@@ -21,7 +21,8 @@
     {% endif %}
     {% endwith %}
 
-    <a href="{{ url_for('newRestaurant') }}"><button>Add New Restaurant</button></a>
+    <a href="{{ url_for('newRestaurant') }}">
+        <button class="button--top">Add New Restaurant</button></a>
     <ul class="restaurants">
     {% for r in restaurants %}
         <li class="restaurants__restaurant">
