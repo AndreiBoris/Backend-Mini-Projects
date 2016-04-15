@@ -19,6 +19,7 @@ item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$
 @app.route('/')
 @app.route('/restaurants')
 def showRestaurants():
+    # TODO: Get the restaurans actually being asked for, not placeholders
     return render_template('restaurants.html', restaurants=restaurants )
 
 # Add a new restaurant
@@ -29,12 +30,14 @@ def newRestaurant():
 # Edit existing restaurant
 @app.route('/restaurant/<int:restaurant_id>/edit')
 def editRestaurant(restaurant_id):
-    return render_template('editrestaurant.html', r=restaurant)
+    # TODO: Get the restaurant that is actually being asked for, not placeholder
+    return render_template('editrestaurant.html', r=restaurant)-
 
 # Delete existing restaurant
 @app.route('/restaurant/<int:restaurant_id>/delete')
 def deleteRestaurant(restaurant_id):
-    return 'Are you use you want to delete restaurant number %d' % restaurant_id
+    # TODO: Get the restaurant that is actually being asked for, not placeholder
+    return render_template('deleterestaurant.html', r=restaurant)
 
 # List all menu items in a particular restaurant
 @app.route('/restaurant/<int:restaurant_id>')
