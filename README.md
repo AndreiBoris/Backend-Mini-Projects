@@ -11,10 +11,10 @@ all the necessary resources installed on it. This machine already exists in this
 repository, here's how you get it working:
 
 Alternatively, if you just want to view the files relevant to the projects you
-can find more information in these READMEs:
+can find more information in their READMEs:
 
-* [Tournament README](#)
-* [Menu App README](#)
+* [Mini Tournament](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/tournament)
+* [Menu App](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/catalog)
 
 * Clone this repository:
 
@@ -43,7 +43,7 @@ machine boots up.
 vagrant ssh
 ```
 
-Now you can follow particular instructures to view either project:
+Now you can follow particular instructions to view either project:
 
-* [View Tournament](#)
-* [View Menu App](#)
+* [View Tournament](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/tournament#view)
+* [View Menu App](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/catalog#view)
