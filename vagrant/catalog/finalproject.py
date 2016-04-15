@@ -62,7 +62,7 @@ def editMenuItem(restaurant_id, item_id):
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete')
 def deleteMenuItem(restaurant_id, item_id):
     # TODO: Replace placeholders
-    return 'Are you sure you want to delete item %d in restaurant %d' % (item_id, restaurant_id)
+    return render_template('deletemenuitem.html', r = restaurant, i = item)
 
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
