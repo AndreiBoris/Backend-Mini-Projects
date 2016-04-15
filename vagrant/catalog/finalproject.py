@@ -102,16 +102,31 @@ def newMenuItem(restaurant_id):
         return render_template('newmenuitem.html', r=selectedRestaurant)
 
 # Edit existing menu item in a restaurant
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/edit')
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/edit', methods=['GET', 'POST'])
 def editMenuItem(restaurant_id, item_id):
-    # TODO: Replace placeholders
-    return render_template('editmenuitem.html', r=restaurant, i=item)
+    selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    selectedItem = session.query(MenuItem).filter_by(id = item_id).one()
+    if request.method == 'POST':
+        selectedItem.name = request.form['name']
+        selectedItem.price = request.form['price']
+        selectedItem.description = request.form['description']
+        session.add(selectedItem)
+        session.commit()
+        return redirect(url_for('showMenu', restaurant_id = restaurant_id))
+    else: # GET
+        return render_template('editmenuitem.html', r=selectedRestaurant, i=selectedItem)
 
 # Delete existing menu item in a restaurant
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete')
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete', methods=['GET', 'POST'])
 def deleteMenuItem(restaurant_id, item_id):
-    # TODO: Replace placeholders
-    return render_template('deletemenuitem.html', r = restaurant, i = item)
+    selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+    selectedItem = session.query(MenuItem).filter_by(id = item_id).one()
+    if request.method == 'POST':
+        session.delete(selectedItem)
+        session.commit()
+        return redirect(url_for('showMenu', restaurant_id = restaurant_id))
+    else: # GET
+        return render_template('deletemenuitem.html', r = selectedRestaurant, i = selectedItem)
 
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
