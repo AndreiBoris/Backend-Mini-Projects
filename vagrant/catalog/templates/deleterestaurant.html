@@ -10,7 +10,7 @@
     <form action="{{ url_for('deleteRestaurant', restaurant_id = r.id )}}" method="post">
         <button class="button--big" type="submit">Delete</button>
         <a href="{{ url_for('showRestaurants' )}}">
-            <button type="button" class="button--big button--cancel">Cancel</button>
+            <button type="button" class="button--big button--warning">Cancel</button>
         </a>
     </form>
 </div>

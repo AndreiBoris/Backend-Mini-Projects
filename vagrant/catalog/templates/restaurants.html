@@ -27,14 +27,13 @@
     {% for r in restaurants %}
         <li class="restaurants__restaurant">
             <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">
-                <h3>{{ r.name }}</h3>
+                <h2>{{ r.name }}</h2>
             </a>
             <a href="{{ url_for('editRestaurant', restaurant_id = r.id )}}">
-                Edit
+                <button class="button--big">Edit</button>
             </a>
-        </br>
             <a href="{{ url_for('deleteRestaurant', restaurant_id = r.id )}}">
-                Delete
+                <button class="button--big button--warning">Delete</button>
             </a>
         </li>
     {% endfor %}

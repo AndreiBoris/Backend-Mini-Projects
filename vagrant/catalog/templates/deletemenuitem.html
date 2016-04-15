@@ -8,9 +8,9 @@
     <div class="menu">
     <h1 class="title">Are you sure you want to delete {{ i.name }}?</h1>
     <form action="{{ url_for('deleteMenuItem', restaurant_id = r.id, item_id = i.id )}}" method="post">
-        <button class="button--big" type="submit">Delete</button>
+            <button class="button--big" type="submit">Delete</button>
         <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">
-            <button type="button" class="button--big button--cancel">Cancel</button>
+            <button type="button" class="button--big button--warning">Cancel</button>
         </a>
     </form>
 </div>
