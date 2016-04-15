@@ -11,7 +11,7 @@ restaurants = [{'name': 'The CRUDdy Crab', 'id': '1'}, {'name':'Blue Burgers', '
 
 #Fake Menu Items
 items = [ {'name':'Cheese Pizza', 'description':'made with fresh cheese', 'price':'$5.99','course' :'Entree', 'id':'1'}, {'name':'Chocolate Cake','description':'made with Dutch Chocolate', 'price':'$3.99', 'course':'Dessert','id':'2'},{'name':'Caesar Salad', 'description':'with fresh organic vegetables','price':'$5.99', 'course':'Entree','id':'3'},{'name':'Iced Tea', 'description':'with lemon','price':'$.99', 'course':'Beverage','id':'4'},{'name':'Spinach Dip', 'description':'creamy dip with fresh spinach','price':'$1.99', 'course':'Appetizer','id':'5'} ]
-item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree'}
+item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree', 'id':'1'}
 
 
 
@@ -56,7 +56,7 @@ def newMenuItem(restaurant_id):
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/edit')
 def editMenuItem(restaurant_id, item_id):
     # TODO: Replace placeholders
-    return 'Here we can edit item %d in restaurant %d' % (item_id, restaurant_id)
+    return render_template('editmenuitem.html', r=restaurant, i=item)
 
 # Delete existing menu item in a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:item_id>/delete')
