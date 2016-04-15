@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
 </head>
-
-<body>
-    <h1>{{ r.name }} Menu</h1>
+<body class="container">
+    <h1 class="title">{{ r.name }} Menu</h1>
 
     {% with messages = get_flashed_messages() %}
 
