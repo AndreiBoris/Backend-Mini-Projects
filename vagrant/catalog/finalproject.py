@@ -1,8 +1,30 @@
 # Flask web framework
-from flask import Flask, url_for, render_template
+from flask import Flask, url_for, render_template, redirect
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
+
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database_setup import Base, Restaurant, MenuItem
+engine = create_engine('sqlite:///restaurantmenu.db')
+# makes the connection between our class definitions and corresponding tables in
+# the database
+Base.metadata.bind = engine
+# A link of communication between our code executions and the engine created above
+DBSession = sessionmaker(bind = engine)
+# In order to create, read, update, or delete information on our database,
+# SQLAlchemy uses sessions. These are basically just transactions. We can write
+# a bunch of commands and only send them when necessary.
+#
+# You can call methods from within session (below) to make changes to the
+# database. This provides a staging zone for all objects loaded into the
+# database session object. Until we call session.commit(), no changes will be
+# persisted into the database.
+session = DBSession()
+
+
 
 #Fake Restaurants
 restaurant = {'name': 'The CRUDdy Crab', 'id': '1'}
@@ -19,7 +41,7 @@ item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$
 @app.route('/')
 @app.route('/restaurants')
 def showRestaurants():
-    # TODO: Get the restaurans actually being asked for, not placeholders
+    restaurants = session.query(Restaurant).all()
     return render_template('restaurants.html', restaurants=restaurants )
 
 # Add a new restaurant
