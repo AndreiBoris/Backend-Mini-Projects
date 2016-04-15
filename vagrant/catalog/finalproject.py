@@ -35,9 +35,12 @@ def showRestaurants():
 @app.route('/restaurant/new', methods=['GET', 'POST'])
 def newRestaurant():
     if request.method == 'POST':
-        newRestaurant = Restaurant(name = request.form['name'])
+        newName = request.form['name']
+        newRestaurant = Restaurant(name = newName)
         session.add(newRestaurant)
         session.commit()
+        flashMessage = 'Added restaurant %s' % newName
+        flash(flashMessage)
         return redirect(url_for('showRestaurants'))
     else: # GET
         return render_template('newrestaurant.html')
@@ -83,12 +86,15 @@ def showMenu(restaurant_id):
 def newMenuItem(restaurant_id):
     selectedRestaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     if request.method == 'POST':
-        newMenuItem = MenuItem(name = request.form['name'],
+        newName = request.form['name']
+        newMenuItem = MenuItem(name = newName,
                                price = request.form['price'],
                                description = request.form['description'],
                                restaurant_id = restaurant_id)
         session.add(newMenuItem);
         session.commit()
+        flashMessage = 'Added new item %s' % newName
+        flash(flashMessage)
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
     else: # GET
         return render_template('newmenuitem.html', r=selectedRestaurant)

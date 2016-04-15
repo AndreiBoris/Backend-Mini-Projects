@@ -6,6 +6,20 @@
 
 <body>
     <h1>{{ r.name }} Menu</h1>
+
+    {% with messages = get_flashed_messages() %}
+
+    {% if messages %}
+
+    <ul>
+        {% for message in messages %}
+        <li> <strong> {{ message }}</strong></li>
+        {% endfor %}
+    </ul>
+
+    {% endif %}
+    {% endwith %}
+
     <a href="{{ url_for('showRestaurants' )}}">
         <button>Back to Restaurant List</button>
     </a>
