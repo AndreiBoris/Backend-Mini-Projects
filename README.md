@@ -16,6 +16,8 @@ can find more information in their READMEs:
 * [Mini Tournament](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/tournament)
 * [Menu App](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/catalog)
 
+### Steps to follow
+
 * Clone this repository:
 
 ```
