@@ -30,3 +30,9 @@ add, edit or delete those as well. After completing an action a message will
 flash to indicate that the action was performed.
 
 The data will all persist in the database file `restaurantmenu.db`
+
+
+### Artifacts
+
+Of interests is perhaps the `webserver.py` file that attempts to do some of what
+is done in `finalproject.py` except without a framework.
