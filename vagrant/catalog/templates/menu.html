@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <h1>{{ r.name }} Menu</h1>
+    <a href="{{ url_for('newMenuItem', restaurant_id = r.id) }}"><button>Add New Menu Item</button></a>
+    {% if items|length == 0 %}
+        <p>This menu is empty.</p>
+    {% endif %}
+    <ul>
+    {% for i in items  %}
+        <li>
+            <h3>{{ i.name }}</h3>
+            <p>{{ i.price }}</p>
+            <p>{{ i.description }}</p>
+            <a href="{{ url_for('editMenuItem', restaurant_id = r.id, item_id = i.id )}}">
+                Edit
+            </a>
+        </br>
+            <a href="{{ url_for('deleteMenuItem', restaurant_id = r.id, item_id = i.id )}}">
+                Delete
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

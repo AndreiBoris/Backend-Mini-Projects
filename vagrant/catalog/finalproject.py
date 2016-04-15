@@ -31,7 +31,7 @@ def newRestaurant():
 @app.route('/restaurant/<int:restaurant_id>/edit')
 def editRestaurant(restaurant_id):
     # TODO: Get the restaurant that is actually being asked for, not placeholder
-    return render_template('editrestaurant.html', r=restaurant)-
+    return render_template('editrestaurant.html', r=restaurant)
 
 # Delete existing restaurant
 @app.route('/restaurant/<int:restaurant_id>/delete')
@@ -43,7 +43,8 @@ def deleteRestaurant(restaurant_id):
 @app.route('/restaurant/<int:restaurant_id>')
 @app.route('/restaurant/<int:restaurant_id>/menu')
 def showMenu(restaurant_id):
-    return 'Here is a list of all the menu items for restaurant number %d' % restaurant_id
+    # TODO: Replace placeholders with an actual restaurant and items
+    return render_template('menu.html', r=restaurant, items=items)
 
 # Add a new menu item for a restaurant
 @app.route('/restaurant/<int:restaurant_id>/menu/new')
