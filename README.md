@@ -13,8 +13,8 @@ repository, here's how you get it working:
 Alternatively, if you just want to view the files relevant to the projects you
 can find more information in their READMEs:
 
-* [Mini Tournament](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/tournament)
-* [Menu App](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/catalog)
+* [Mini Tournament](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/tournament)
+* [Menu App](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/catalog)
 
 * Clone this repository:
 
@@ -45,5 +45,5 @@ vagrant ssh
 
 Now you can follow particular instructions to view either project:
 
-* [View Tournament](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/tournament#view)
-* [View Menu App](https://github.com/AndreiCommunication/SQL-Python-Tournament/tree/master/vagrant/catalog#view)
+* [View Tournament](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/tournament#view)
+* [View Menu App](https://github.com/AndreiCommunication/Backend-Mini-Projects/tree/master/vagrant/catalog#view)
