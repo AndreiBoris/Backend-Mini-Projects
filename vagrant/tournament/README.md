@@ -12,7 +12,8 @@ that `tournament.py` is functioning correctly
 
 ### View
 
-First, [log in to the virtual machine](#) and then do the following:
+First, [log in to the virtual machine](https://github.com/AndreiCommunication/Backend-Mini-Projects#steps-to-follow)
+and then do the following:
 
 * Enter the tournament directory:
 

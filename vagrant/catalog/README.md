@@ -5,4 +5,5 @@ This application is an exercise in creating a Python backend using the
 
 ### View
 
-First, [log in to the virtual machine](#) and then do the following:
+First, [log in to the virtual machine](https://github.com/AndreiCommunication/Backend-Mini-Projects#steps-to-follow)
+and then do the following:
