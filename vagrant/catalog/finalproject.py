@@ -1,5 +1,5 @@
 # Flask web framework
-from flask import Flask, url_for, render_template, redirect, request
+from flask import Flask, url_for, render_template, redirect, request, jsonify
 # The name of the running application is the argument we pass to the instance
 # of Flask
 app = Flask(__name__)
@@ -23,19 +23,6 @@ DBSession = sessionmaker(bind = engine)
 # database session object. Until we call session.commit(), no changes will be
 # persisted into the database.
 session = DBSession()
-
-
-
-#Fake Restaurants
-restaurant = {'name': 'The CRUDdy Crab', 'id': '1'}
-
-restaurants = [{'name': 'The CRUDdy Crab', 'id': '1'}, {'name':'Blue Burgers', 'id':'2'},{'name':'Taco Hut', 'id':'3'}]
-
-#Fake Menu Items
-items = [ {'name':'Cheese Pizza', 'description':'made with fresh cheese', 'price':'$5.99','course' :'Entree', 'id':'1'}, {'name':'Chocolate Cake','description':'made with Dutch Chocolate', 'price':'$3.99', 'course':'Dessert','id':'2'},{'name':'Caesar Salad', 'description':'with fresh organic vegetables','price':'$5.99', 'course':'Entree','id':'3'},{'name':'Iced Tea', 'description':'with lemon','price':'$.99', 'course':'Beverage','id':'4'},{'name':'Spinach Dip', 'description':'creamy dip with fresh spinach','price':'$1.99', 'course':'Appetizer','id':'5'} ]
-item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree', 'id':'1'}
-
-
 
 # List all the restaurants
 @app.route('/')
@@ -127,6 +114,13 @@ def deleteMenuItem(restaurant_id, item_id):
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
     else: # GET
         return render_template('deletemenuitem.html', r = selectedRestaurant, i = selectedItem)
+
+# Get JSON of all of the restaurants
+@app.route('/JSON')
+@app.route('/restaurants/JSON')
+def restaurantsJSON():
+    restaurants = session.query(Restaurant).all()
+    return jsonify(Restaurants=[r.serialize for r in restaurants])
 
 # The application run by the Python interpretor gets the name __main__
 # Only run when this script is directly run, not imported.
