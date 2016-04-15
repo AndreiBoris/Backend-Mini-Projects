@@ -21,7 +21,7 @@ can find more information in their READMEs:
 * Clone this repository:
 
 ```
-git clone https://github.com/AndreiCommunication/SQL-Python-Tournament.git thisvm
+git clone https://github.com/AndreiCommunication/Backend-Mini-Projects.git thisvm
 cd thisvm
 ```
 
