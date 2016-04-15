@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
 </head>
 <body class="container">
+    <div class="menu">
     <h1 class="title">Edit Restaurant</h1>
     <form action="{{ url_for('editRestaurant', restaurant_id = r.id )}}" method="post">
         <label for="name">Name</label>
@@ -14,5 +15,6 @@
         <button type="submit">Edit</button>
         <a href="{{ url_for('showRestaurants' )}}">Cancel</a>
     </form>
+</div>
 </body>
 </html>

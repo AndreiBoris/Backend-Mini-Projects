@@ -1,9 +1,6 @@
 .container {
     max-width: 600px;
     margin: auto;
-    padding: 0 1em;
-    border-left: 1px solid #999;
-    border-right: 1px solid #999;
 }
 
 .title {
@@ -11,13 +8,37 @@
 }
 
 .menu {
+    border-left: 2px solid #555;
+    border-right: 2px solid #555;
+    padding: 0 1em;
+    background-color: #ff9;
+}
+
+a {
+    text-decoration: none;
+    color: #c60;
+}
+
+.restaurants {
     list-style: none;
 }
 
-.menu__item {
-    padding-top: 0.5em;
+.restaurants__restaurant + .restaurants__restaurant {
+    border-top: 1px solid #555;
 }
 
-.menu__item + .menu__item {
-    border-top: 1px solid #666;
+.restaurants__restaurant {
+    padding-bottom: 1em;
+}
+
+.menuitems {
+    list-style: none;
+}
+
+.menuitems__menuitem + .menuitems__menuitem {
+    border-top: 1px solid #555;
+}
+
+.menuitems__menuitem {
+    padding-bottom: 1em;
 }

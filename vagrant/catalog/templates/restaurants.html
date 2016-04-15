@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
 </head>
 <body class="container">
+    <div class="menu">
     <h1 class="title">Restaurants</h1>
 
     {% with messages = get_flashed_messages() %}
@@ -21,9 +22,9 @@
     {% endwith %}
 
     <a href="{{ url_for('newRestaurant') }}"><button>Add New Restaurant</button></a>
-    <ul>
+    <ul class="restaurants">
     {% for r in restaurants %}
-        <li>
+        <li class="restaurants__restaurant">
             <a href="{{ url_for('showMenu', restaurant_id = r.id )}}">
                 <h3>{{ r.name }}</h3>
             </a>
@@ -37,5 +38,6 @@
         </li>
     {% endfor %}
     </ul>
+</div>
 </body>
 </html>

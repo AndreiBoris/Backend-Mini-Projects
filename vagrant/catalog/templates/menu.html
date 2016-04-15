@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
 </head>
 <body class="container">
+    <div class="menu">
     <h1 class="title">{{ r.name }} Menu</h1>
 
     {% with messages = get_flashed_messages() %}
@@ -30,9 +31,9 @@
     {% if items|length == 0 %}
     <p>This menu is empty.</p>
     {% endif %}
-    <ul>
+    <ul class="menuitems">
         {% for i in items %}
-        <li>
+        <li class="menuitems__menuitem">
             <h3>{{ i.name }}</h3>
             <p>{{ i.price }}</p>
             <p>{{ i.description }}</p>
@@ -46,6 +47,7 @@
         </li>
         {% endfor %}
     </ul>
+</div>
 </body>
 
 </html>

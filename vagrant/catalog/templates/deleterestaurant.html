@@ -5,10 +5,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}">
 </head>
 <body class="container">
+    <div class="menu">
     <h1 class="title">Are you sure you want to delete {{ r.name }}?</h1>
     <form action="{{ url_for('deleteRestaurant', restaurant_id = r.id )}}" method="post">
         <button type="submit">Delete</button>
         <a href="{{ url_for('showRestaurants' )}}">Cancel</a>
     </form>
+</div>
 </body>
 </html>
